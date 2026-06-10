@@ -1,0 +1,1101 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Xポスト文字数カウンター</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #16202a;
+      --muted: #617083;
+      --line: #d9e0ea;
+      --soft: #f5f7fa;
+      --panel: #ffffff;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --warn: #b7791f;
+      --danger: #c2413b;
+      --shadow: 0 18px 46px rgba(22, 32, 42, 0.12);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.12), transparent 34%),
+        linear-gradient(315deg, rgba(194, 65, 59, 0.08), transparent 38%),
+        var(--soft);
+    }
+
+    button,
+    textarea,
+    select,
+    input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: 0;
+    }
+
+    .app {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: #111827;
+      color: white;
+      font-weight: 900;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 0.96fr) minmax(430px, 1.04fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: var(--shadow);
+    }
+
+    .editor {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+    }
+
+    .editor label {
+      display: grid;
+      gap: 8px;
+      color: #2d3a4b;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 420px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      color: var(--ink);
+      padding: 16px;
+      line-height: 1.68;
+      outline: none;
+      transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+      background: white;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      min-height: 44px;
+      border-radius: 8px;
+      padding: 0 14px;
+      background: white;
+      border: 1px solid var(--line);
+      color: #334155;
+      font-weight: 900;
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .btn:hover {
+      filter: brightness(0.98);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat {
+      min-width: 0;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+    }
+
+    .label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .value {
+      display: block;
+      margin-top: 7px;
+      color: #1f2937;
+      font-size: 26px;
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .rule-box {
+      display: grid;
+      gap: 8px;
+      padding: 13px;
+      border: 1px solid #cfe0df;
+      border-radius: 8px;
+      background: #f2fbf9;
+      color: #24413f;
+      font-size: 13px;
+      line-height: 1.65;
+      font-weight: 700;
+    }
+
+    .rule-title {
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .rule-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .ratio-panel {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+    }
+
+    .ratio-panel h2 {
+      margin: 0;
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    .ratio-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .ratio-item {
+      min-width: 0;
+      padding: 10px;
+      border: 1px solid #e3e8ef;
+      border-radius: 8px;
+      background: #fbfcfe;
+    }
+
+    .ratio-name {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1.3;
+    }
+
+    .ratio-value {
+      display: block;
+      margin-top: 5px;
+      color: #1f2937;
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1.15;
+    }
+
+    .ratio-value.out-of-range {
+      color: var(--danger);
+    }
+
+    .ratio-count {
+      display: block;
+      margin-top: 3px;
+      color: #6b778a;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .side {
+      display: grid;
+      gap: 14px;
+    }
+
+    .preview {
+      padding: 18px;
+    }
+
+    .preview h2,
+    .checks h2 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .preview-note {
+      margin: -4px 0 12px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.6;
+    }
+
+    .pattern-note {
+      display: inline-flex;
+      max-width: 100%;
+      margin-bottom: 12px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #eef8f6;
+      color: #24514d;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1.45;
+    }
+
+    .tweet {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid #e3e8ef;
+      border-radius: 8px;
+      background: white;
+    }
+
+    .avatar {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #111827;
+      color: white;
+      font-weight: 900;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .name {
+      color: #1f2937;
+      font-weight: 900;
+    }
+
+    .body {
+      min-height: 148px;
+      margin-top: 6px;
+      color: #111827;
+      line-height: 1.62;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .body.compact {
+      min-height: 96px;
+    }
+
+    .timeline-line {
+      min-height: 72px;
+      margin-top: 6px;
+      color: #111827;
+      line-height: 1.62;
+      overflow-wrap: anywhere;
+    }
+
+    .timeline-line .body {
+      display: inline;
+      min-height: 0;
+      margin-top: 0;
+      white-space: pre-wrap;
+    }
+
+    .more-link {
+      display: none;
+      margin-left: 6px;
+      color: #1d9bf0;
+      font-size: 14px;
+      font-weight: 800;
+      vertical-align: baseline;
+    }
+
+    .more-link.show {
+      display: inline-block;
+    }
+
+    .timeline-preview .tweet {
+      grid-template-columns: 36px minmax(0, 1fr);
+      gap: 10px;
+      padding: 16px;
+      border-color: #eef1f5;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .timeline-preview .avatar {
+      width: 36px;
+      height: 36px;
+      font-size: 14px;
+    }
+
+    .timeline-preview .meta {
+      font-size: 14px;
+    }
+
+    .timeline-preview .timeline-line {
+      min-height: 116px;
+      margin-top: 4px;
+      font-size: 15.5px;
+      line-height: 1.45;
+    }
+
+    .timeline-actions {
+      display: flex;
+      align-items: center;
+      gap: 34px;
+      margin-top: 18px;
+      color: #8aa0bb;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .timeline-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 42px;
+    }
+
+    .placeholder {
+      color: #8792a2;
+    }
+
+    .checks {
+      padding: 18px;
+    }
+
+    .check-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .check-list li {
+      padding: 11px 12px;
+      border-radius: 8px;
+      background: #f6f8fb;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.55;
+    }
+
+    .check-list li.warning {
+      background: #fff7e8;
+      color: #8a450c;
+    }
+
+    .check-list li.over {
+      background: #fff0ef;
+      color: #ad2420;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      max-width: min(360px, calc(100vw - 36px));
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: #17202b;
+      color: white;
+      font-size: 13px;
+      font-weight: 800;
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+      z-index: 20;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 880px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      textarea {
+        min-height: 320px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .app {
+        width: min(100vw - 24px, 1180px);
+        padding: 18px 0;
+      }
+
+      .topbar {
+        display: grid;
+      }
+
+      .actions {
+        justify-content: stretch;
+      }
+
+      .btn {
+        flex: 1 1 130px;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .rule-list {
+        grid-template-columns: 1fr;
+      }
+
+      .ratio-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark">X</div>
+        <div>
+          <h1>Xポスト文字数カウンター</h1>
+          <p class="lead">半角0.5、全角1、改行0.5、URL11.5のX換算で確認できます。</p>
+        </div>
+      </div>
+      <a class="btn" href="https://x-article-generator.onrender.com" target="_blank" rel="noreferrer" aria-label="X記事ジェネレーターを開く">記事ジェネレーターへ</a>
+    </header>
+
+    <div class="layout">
+      <section class="panel editor" aria-label="投稿文入力">
+        <label>
+          投稿文
+          <textarea id="postText" placeholder="ここにXへ投稿したい文章を入力してください。半角0.5、全角1、改行0.5、URL11.5で換算します。"></textarea>
+        </label>
+
+        <div class="rule-box" aria-label="X上での文字数カウントのルール">
+          <div class="rule-title">※X上での文字数カウントのルール</div>
+          <ul class="rule-list">
+            <li>半角文字: 0.5文字</li>
+            <li>全角文字: 1文字</li>
+            <li>改行: 0.5文字</li>
+            <li>URL: 11.5文字</li>
+          </ul>
+        </div>
+
+        <div class="actions">
+          <button class="btn" id="formatBtn" type="button">整形</button>
+          <button class="btn" id="clearBtn" type="button">クリア</button>
+          <button class="btn primary" id="copyBtn" type="button">コピー</button>
+        </div>
+        <p class="lead">整形: 行末スペースを削除し、3つ以上続く改行を2つにまとめ、前後の空白を削除します。</p>
+
+        <div class="stats" aria-live="polite">
+          <div class="stat">
+            <span class="label">入力文字数</span>
+            <span id="rawCount" class="value">0</span>
+          </div>
+          <div class="stat">
+            <span class="label">X換算</span>
+            <span id="weightedCount" class="value">0</span>
+          </div>
+          <div class="stat">
+            <span class="label">行数</span>
+            <span id="lineCount" class="value">1</span>
+          </div>
+        </div>
+
+        <section class="ratio-panel" aria-label="文字種比率">
+          <h2>文字種比率</h2>
+          <p class="preview-note">読みやすい文章の目安: ひらがな55%、漢字30%、カタカナ10%、その他5% 前後。目安から外れた項目は赤文字で表示します。</p>
+          <div class="ratio-grid">
+            <div class="ratio-item">
+              <span class="ratio-name">漢字比率</span>
+              <span id="kanjiRatio" class="ratio-value">0.0%</span>
+              <span id="kanjiCount" class="ratio-count">0文字</span>
+            </div>
+            <div class="ratio-item">
+              <span class="ratio-name">ひらがな比率</span>
+              <span id="hiraganaRatio" class="ratio-value">0.0%</span>
+              <span id="hiraganaCount" class="ratio-count">0文字</span>
+            </div>
+            <div class="ratio-item">
+              <span class="ratio-name">全角カタカナ比率</span>
+              <span id="katakanaRatio" class="ratio-value">0.0%</span>
+              <span id="katakanaCount" class="ratio-count">0文字</span>
+            </div>
+            <div class="ratio-item">
+              <span class="ratio-name">英数字（半角）比率</span>
+              <span id="halfAlnumRatio" class="ratio-value">0.0%</span>
+              <span id="halfAlnumCount" class="ratio-count">0文字</span>
+            </div>
+            <div class="ratio-item">
+              <span class="ratio-name">英数字（全角）比率</span>
+              <span id="fullAlnumRatio" class="ratio-value">0.0%</span>
+              <span id="fullAlnumCount" class="ratio-count">0文字</span>
+            </div>
+            <div class="ratio-item">
+              <span class="ratio-name">その他（句読点など）比率</span>
+              <span id="otherRatio" class="ratio-value">0.0%</span>
+              <span id="otherCount" class="ratio-count">0文字</span>
+            </div>
+            <div class="ratio-item">
+              <span class="ratio-name">リンク数</span>
+              <span id="linkCount" class="ratio-value">0</span>
+              <span class="ratio-count">http / https</span>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <aside class="side">
+        <section class="panel preview timeline-preview" aria-label="タイムライン表示">
+          <h2>タイムライン表示</h2>
+          <p class="preview-note">画像の4パターンを参考に、改行・半角スペース・段落構造を見て近似表示します。</p>
+          <div id="timelinePattern" class="pattern-note">判定: 入力待ち</div>
+          <div class="tweet">
+            <div class="avatar" aria-hidden="true">X</div>
+            <div>
+              <div class="meta">
+                <span class="name">プレビュー</span>
+                <span>@preview</span>
+                <span>·</span>
+                <span>今</span>
+              </div>
+              <div class="timeline-line">
+                <span id="timelineBody" class="body compact placeholder">入力した文章がここに表示されます。</span>
+                <span id="timelineMore" class="more-link">…さらに表示</span>
+              </div>
+              <div class="timeline-actions" aria-hidden="true">
+                <span class="timeline-action">○ 76</span>
+                <span class="timeline-action">↻ 76</span>
+                <span class="timeline-action">♡ 76</span>
+                <span class="timeline-action">♧</span>
+                <span class="timeline-action">↥</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel preview" aria-label="全文の詳細表示">
+          <h2>全文の詳細表示</h2>
+          <div class="tweet">
+            <div class="avatar" aria-hidden="true">X</div>
+            <div>
+              <div class="meta">
+                <span class="name">プレビュー</span>
+                <span>@preview</span>
+                <span>·</span>
+                <span>詳細</span>
+              </div>
+              <div id="detailBody" class="body placeholder">入力した文章がここに全文表示されます。</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel checks" aria-label="チェック結果">
+          <h2>チェック結果</h2>
+          <ul id="checkList" class="check-list"></ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const STORAGE_KEY = "xCounterDraft";
+    const postText = document.getElementById("postText");
+    const rawCount = document.getElementById("rawCount");
+    const weightedCount = document.getElementById("weightedCount");
+    const lineCount = document.getElementById("lineCount");
+    const kanjiRatio = document.getElementById("kanjiRatio");
+    const kanjiCount = document.getElementById("kanjiCount");
+    const hiraganaRatio = document.getElementById("hiraganaRatio");
+    const hiraganaCount = document.getElementById("hiraganaCount");
+    const katakanaRatio = document.getElementById("katakanaRatio");
+    const katakanaCount = document.getElementById("katakanaCount");
+    const halfAlnumRatio = document.getElementById("halfAlnumRatio");
+    const halfAlnumCount = document.getElementById("halfAlnumCount");
+    const fullAlnumRatio = document.getElementById("fullAlnumRatio");
+    const fullAlnumCount = document.getElementById("fullAlnumCount");
+    const otherRatio = document.getElementById("otherRatio");
+    const otherCount = document.getElementById("otherCount");
+    const linkCount = document.getElementById("linkCount");
+    const timelinePattern = document.getElementById("timelinePattern");
+    const timelineBody = document.getElementById("timelineBody");
+    const timelineMore = document.getElementById("timelineMore");
+    const detailBody = document.getElementById("detailBody");
+    const checkList = document.getElementById("checkList");
+    const copyBtn = document.getElementById("copyBtn");
+    const formatBtn = document.getElementById("formatBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const toast = document.getElementById("toast");
+    let toastTimer = 0;
+
+    function countCodePoints(value) {
+      return Array.from(String(value || "")).length;
+    }
+
+    function countXWeighted(value) {
+      const text = String(value || "");
+      let total = 0;
+      let lastIndex = 0;
+      const urlPattern = /https?:\/\/[^\s]+/g;
+      for (const match of text.matchAll(urlPattern)) {
+        total += countXWeightedPlain(text.slice(lastIndex, match.index));
+        total += 11.5;
+        lastIndex = match.index + match[0].length;
+      }
+      total += countXWeightedPlain(text.slice(lastIndex));
+      return total;
+    }
+
+    function linkMatches(value) {
+      return String(value || "").match(/https?:\/\/[^\s]+/g) || [];
+    }
+
+    function countXWeightedPlain(value) {
+      return Array.from(String(value || "")).reduce((total, char) => {
+        if (char === "\n") return total + 0.5;
+        return total + (isHalfWidthChar(char) ? 0.5 : 1);
+      }, 0);
+    }
+
+    function isHalfWidthChar(char) {
+      return /^[\u0020-\u007e\uff61-\uff9f]$/u.test(char);
+    }
+
+    function formatWeighted(value) {
+      return Number.isInteger(value) ? String(value) : value.toFixed(1);
+    }
+
+    function analyzeTimelinePattern(value) {
+      const text = String(value || "");
+      const normalized = text.replace(/\r\n|\r/g, "\n");
+      const lines = normalized.split("\n");
+      const nonEmptyLines = lines.filter(line => line.trim());
+      const hasNewline = lines.length > 1;
+      const hasHalfSpace = / /.test(text);
+
+      if (!text.trim()) {
+        return {
+          key: "empty",
+          label: "判定: 入力待ち",
+          advice: "投稿文を入力すると、表示構造を判定します。"
+        };
+      }
+
+      if (hasHalfSpace) {
+        return {
+          key: "half-space",
+          label: "判定: ④ 半角スペース混入",
+          advice: "半角スペース前後を別ブロックとして扱い、140文字を超えるブロックの直前まで表示します。"
+        };
+      }
+
+      if (!hasNewline) {
+        return {
+          key: "single-block",
+          label: "判定: ① 改行なしの1ブロック",
+          advice: "1つの塊として判定します。長文では140文字付近で「さらに表示」になりやすい基本形です。"
+        };
+      }
+
+      if (nonEmptyLines.length === 2) {
+        return {
+          key: "title-body",
+          label: "判定: ③ 1行目タイトル + 本文",
+          advice: "1行目を1ブロック、2行目以降を2ブロックとして扱い、2ブロック目で140文字を超えたら1行目まで表示します。"
+        };
+      }
+
+      return {
+        key: "newline-blocks",
+        label: "判定: ② 改行ブロック構成",
+        advice: "改行ごとに別ブロックとして扱い、140文字を超えるブロックの直前まで表示します。"
+      };
+    }
+
+    function truncateForTimeline(value, pattern, limit = 140) {
+      if (pattern.key === "title-body") {
+        return truncateByBlocks(makeNewlineBlocks(value), limit);
+      }
+      if (pattern.key === "newline-blocks") {
+        return truncateByBlocks(makeNewlineBlocks(value), limit);
+      }
+      if (pattern.key === "half-space") {
+        return truncateByBlocks(makeHalfSpaceBlocks(value), limit);
+      }
+      return truncateSingleBlock(value, limit);
+    }
+
+    function truncateSingleBlock(value, limit = 140) {
+      const text = String(value || "");
+      let result = "";
+      let total = 0;
+      let index = 0;
+      const urlPattern = /https?:\/\/[^\s]+/g;
+
+      for (const match of text.matchAll(urlPattern)) {
+        const before = text.slice(index, match.index);
+        const beforeResult = takeWeightedPlain(before, limit - total);
+        result += beforeResult.text;
+        total += beforeResult.weight;
+        if (beforeResult.truncated || total + 11.5 > limit) {
+          return { text: result.trimEnd(), truncated: true };
+        }
+        result += match[0];
+        total += 11.5;
+        index = match.index + match[0].length;
+      }
+
+      const restResult = takeWeightedPlain(text.slice(index), limit - total);
+      result += restResult.text;
+      return {
+        text: result.trimEnd(),
+        truncated: restResult.truncated
+      };
+    }
+
+    function makeNewlineBlocks(value) {
+      return String(value || "")
+        .replace(/\r\n|\r/g, "\n")
+        .split("\n")
+        .filter(part => part.trim())
+        .map((part, index) => ({
+          separator: index === 0 ? "" : "\n",
+          text: part
+        }));
+    }
+
+    function makeHalfSpaceBlocks(value) {
+      const parts = String(value || "")
+        .replace(/\r\n|\r/g, "\n")
+        .split(/([ \n]+)/);
+      const blocks = [];
+      let separator = "";
+      parts.forEach(part => {
+        if (!part) return;
+        if (/^[ \n]+$/.test(part)) {
+          separator += part;
+          return;
+        }
+        blocks.push({ separator: blocks.length ? separator : "", text: part });
+        separator = "";
+      });
+      return blocks;
+    }
+
+    function truncateByBlocks(blocks, limit) {
+      let shown = "";
+      let total = 0;
+      for (const block of blocks) {
+        const addition = `${block.separator}${block.text}`;
+        const nextTotal = total + countXWeighted(addition);
+        if (nextTotal > limit) {
+          if (!shown) {
+            return truncateSingleBlock(block.text, limit);
+          }
+          return { text: shown.trimEnd(), truncated: true };
+        }
+        shown += addition;
+        total = nextTotal;
+      }
+      return { text: shown.trimEnd(), truncated: false };
+    }
+
+    function takeWeightedPlain(value, limit) {
+      let text = "";
+      let weight = 0;
+      for (const char of Array.from(String(value || ""))) {
+        const nextWeight = char === "\n" ? 0.5 : (isHalfWidthChar(char) ? 0.5 : 1);
+        if (weight + nextWeight > limit) {
+          return { text, weight, truncated: true };
+        }
+        text += char;
+        weight += nextWeight;
+      }
+      return { text, weight, truncated: false };
+    }
+
+    function countCharacterTypes(value) {
+      const counts = {
+        kanji: 0,
+        hiragana: 0,
+        katakana: 0,
+        halfAlnum: 0,
+        fullAlnum: 0,
+        other: 0
+      };
+
+      Array.from(String(value || "")).forEach(char => {
+        if (/[\u3400-\u9fff\uf900-\ufaff]/u.test(char)) {
+          counts.kanji += 1;
+        } else if (/[\u3041-\u3096\u309d-\u309f]/u.test(char)) {
+          counts.hiragana += 1;
+        } else if (/[\u30a1-\u30fa\u30fc-\u30ff]/u.test(char)) {
+          counts.katakana += 1;
+        } else if (/[A-Za-z0-9]/u.test(char)) {
+          counts.halfAlnum += 1;
+        } else if (/[Ａ-Ｚａ-ｚ０-９]/u.test(char)) {
+          counts.fullAlnum += 1;
+        } else {
+          counts.other += 1;
+        }
+      });
+
+      return counts;
+    }
+
+    function formatRatio(count, total) {
+      return total ? `${((count / total) * 100).toFixed(1)}%` : "0.0%";
+    }
+
+    function isRatioOutOfRange(count, total, target, tolerance = 5) {
+      if (!total || typeof target !== "number") return false;
+      const percentage = (count / total) * 100;
+      return percentage < target - tolerance || percentage > target + tolerance;
+    }
+
+    function setRatio(ratioElement, countElement, count, total, target = null) {
+      ratioElement.textContent = formatRatio(count, total);
+      countElement.textContent = `${count}文字`;
+      ratioElement.className = `ratio-value ${isRatioOutOfRange(count, total, target) ? "out-of-range" : ""}`.trim();
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function buildChecks(text, raw, weighted, lines, pattern, timeline) {
+      const trimmed = text.trim();
+      const urls = linkMatches(text);
+      const tags = text.match(/#[^\s#]+/g) || [];
+      const checks = [];
+
+      if (!trimmed) {
+        return [{ status: "", text: "投稿文を入力すると、文字数と注意点を自動で確認できます。" }];
+      }
+
+      checks.push({ status: "", text: `X換算は${formatWeighted(weighted)}文字です。半角・改行は0.5文字、URLは11.5文字として計算しています。` });
+      checks.push({ status: pattern.key === "half-space" ? "warning" : "", text: pattern.advice });
+
+      if (urls.length) {
+        checks.push({ status: "", text: `URL ${urls.length}件を、1件11.5文字として換算しています。` });
+      }
+      if (tags.length > 4) {
+        checks.push({ status: "warning", text: `ハッシュタグが${tags.length}個あります。本文が読みにくくならないか確認してください。` });
+      }
+      if (lines > 8) {
+        checks.push({ status: "warning", text: `改行が${lines}行あります。投稿では縦に長く見える可能性があります。` });
+      }
+      if (raw !== weighted) {
+        checks.push({ status: "", text: `実入力は${raw}文字、X換算は${formatWeighted(weighted)}文字です。` });
+      }
+      if (timeline.truncated) {
+        checks.push({ status: "warning", text: "タイムライン表示では、判定パターンに応じて「…さらに表示」として省略表示します。" });
+      }
+
+      return checks;
+    }
+
+    function saveDraft() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        text: postText.value
+      }));
+    }
+
+    function restoreDraft() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        postText.value = data.text || "";
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+
+    function update() {
+      const text = postText.value;
+      const raw = countCodePoints(text);
+      const weighted = countXWeighted(text);
+      const lines = text ? text.split(/\r\n|\r|\n/).length : 1;
+      const typeCounts = countCharacterTypes(text);
+      const links = linkMatches(text);
+      const pattern = analyzeTimelinePattern(text);
+      const timeline = truncateForTimeline(text, pattern);
+
+      rawCount.textContent = String(raw);
+      weightedCount.textContent = formatWeighted(weighted);
+      lineCount.textContent = String(lines);
+      setRatio(kanjiRatio, kanjiCount, typeCounts.kanji, raw, 30);
+      setRatio(hiraganaRatio, hiraganaCount, typeCounts.hiragana, raw, 55);
+      setRatio(katakanaRatio, katakanaCount, typeCounts.katakana, raw, 10);
+      setRatio(halfAlnumRatio, halfAlnumCount, typeCounts.halfAlnum, raw);
+      setRatio(fullAlnumRatio, fullAlnumCount, typeCounts.fullAlnum, raw);
+      setRatio(otherRatio, otherCount, typeCounts.other, raw, 5);
+      linkCount.textContent = String(links.length);
+      timelinePattern.textContent = pattern.label;
+      timelineBody.textContent = text.trim() ? timeline.text : "入力した文章がここに表示されます。";
+      timelineBody.className = text.trim() ? "body compact" : "body compact placeholder";
+      timelineMore.className = `more-link ${timeline.truncated ? "show" : ""}`.trim();
+      detailBody.textContent = text.trim() || "入力した文章がここに全文表示されます。";
+      detailBody.className = text.trim() ? "body" : "body placeholder";
+      checkList.innerHTML = buildChecks(text, raw, weighted, lines, pattern, timeline)
+        .map(item => `<li class="${item.status}">${escapeHtml(item.text)}</li>`)
+        .join("");
+      saveDraft();
+    }
+
+    async function copyText() {
+      const text = postText.value;
+      if (!text.trim()) {
+        showToast("コピーする投稿文を入力してください");
+        return;
+      }
+
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const scratch = document.createElement("textarea");
+          scratch.value = text;
+          scratch.style.position = "fixed";
+          scratch.style.left = "-9999px";
+          document.body.appendChild(scratch);
+          scratch.focus();
+          scratch.select();
+          document.execCommand("copy");
+          scratch.remove();
+        }
+        showToast("投稿文をコピーしました");
+      } catch {
+        showToast("コピーできませんでした。本文を選択してください");
+      }
+    }
+
+    function formatText() {
+      postText.value = postText.value
+        .replace(/[ \t]+\n/g, "\n")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+      update();
+      showToast("改行を整えました");
+    }
+
+    function clearText() {
+      postText.value = "";
+      update();
+      postText.focus();
+      showToast("入力内容をクリアしました");
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
+    }
+
+    postText.addEventListener("input", update);
+    copyBtn.addEventListener("click", copyText);
+    formatBtn.addEventListener("click", formatText);
+    clearBtn.addEventListener("click", clearText);
+
+    restoreDraft();
+    update();
+  </script>
+</body>
+</html>
