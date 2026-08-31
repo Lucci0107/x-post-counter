@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <title>Xポスト文字数カウンター</title>
+  <link rel="icon" href="/favicon.svg?v=20260629" type="image/svg+xml">
   <style>
     :root {
       color-scheme: light;
@@ -13,12 +13,32 @@
       --line: #d9e0ea;
       --soft: #f5f7fa;
       --panel: #ffffff;
+      --field: #fbfcfe;
+      --panel-strong: #ffffff;
       --accent: #0f766e;
       --accent-dark: #115e59;
+      --accent-soft: #eef8f6;
       --warn: #b7791f;
       --danger: #c2413b;
       --shadow: 0 18px 46px rgba(22, 32, 42, 0.12);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+    }
+
+    body.dark {
+      color-scheme: dark;
+      --ink: #edf2f7;
+      --muted: #aeb9c8;
+      --line: #334155;
+      --soft: #0f172a;
+      --panel: #172033;
+      --field: #111827;
+      --panel-strong: #1f2937;
+      --accent: #2dd4bf;
+      --accent-dark: #5eead4;
+      --accent-soft: #12333b;
+      --warn: #f6c56f;
+      --danger: #f87171;
+      --shadow: 0 18px 46px rgba(0, 0, 0, 0.34);
     }
 
     * {
@@ -59,6 +79,14 @@
       justify-content: space-between;
       gap: 18px;
       margin-bottom: 18px;
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
     }
 
     .brand {
@@ -102,7 +130,7 @@
     .panel {
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.94);
+      background: var(--panel);
       box-shadow: var(--shadow);
     }
 
@@ -115,7 +143,7 @@
     .editor label {
       display: grid;
       gap: 8px;
-      color: #2d3a4b;
+      color: var(--ink);
       font-size: 13px;
       font-weight: 800;
     }
@@ -126,10 +154,11 @@
       resize: vertical;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: #fbfcfe;
+      background: var(--field);
       color: var(--ink);
       padding: 16px;
       line-height: 1.68;
+      font-weight: 400;
       outline: none;
       transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
     }
@@ -137,7 +166,7 @@
     textarea:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
-      background: white;
+      background: var(--panel-strong);
     }
 
     .actions {
@@ -151,10 +180,16 @@
       min-height: 44px;
       border-radius: 8px;
       padding: 0 14px;
-      background: white;
+      background: var(--panel-strong);
       border: 1px solid var(--line);
-      color: #334155;
+      color: var(--ink);
       font-weight: 900;
+    }
+
+    .btn.small {
+      min-height: 36px;
+      padding: 0 11px;
+      font-size: 12px;
     }
 
     .btn.primary {
@@ -163,8 +198,72 @@
       color: white;
     }
 
+    .btn.image {
+      background: #1d9bf0;
+      border-color: #1d9bf0;
+      color: white;
+    }
+
+    .btn.copy {
+      background: #16a34a;
+      border-color: #16a34a;
+      color: white;
+    }
+
+    .btn.x-post {
+      min-width: 128px;
+      background: #050505;
+      border-color: #050505;
+      color: white;
+    }
+
     .btn:hover {
       filter: brightness(0.98);
+    }
+
+    .image-input {
+      display: none;
+    }
+
+    .image-preview {
+      display: none;
+      grid-template-columns: 88px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--field);
+    }
+
+    .image-preview.show {
+      display: grid;
+    }
+
+    .image-preview img {
+      width: 88px;
+      height: 66px;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 1px solid #e3e8ef;
+      background: var(--panel-strong);
+    }
+
+    .image-meta {
+      min-width: 0;
+      display: grid;
+      gap: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .image-meta strong {
+      color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
     }
 
     .stats {
@@ -178,7 +277,7 @@
       padding: 13px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: white;
+      background: var(--panel-strong);
     }
 
     .label {
@@ -191,10 +290,14 @@
     .value {
       display: block;
       margin-top: 7px;
-      color: #1f2937;
+      color: var(--ink);
       font-size: 26px;
       line-height: 1;
       font-weight: 900;
+    }
+
+    .value.over {
+      color: var(--danger);
     }
 
     .rule-box {
@@ -203,8 +306,8 @@
       padding: 13px;
       border: 1px solid #cfe0df;
       border-radius: 8px;
-      background: #f2fbf9;
-      color: #24413f;
+      background: var(--accent-soft);
+      color: var(--ink);
       font-size: 13px;
       line-height: 1.65;
       font-weight: 700;
@@ -224,13 +327,101 @@
       list-style: none;
     }
 
+    .tools-panel {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-strong);
+    }
+
+    .tools-panel h2 {
+      margin: 0;
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    .template-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .template-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto auto auto auto;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--field);
+    }
+
+    .template-text {
+      min-width: 0;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .template-position {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 8px;
+      background: var(--panel-strong);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .template-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 9px;
+      border-radius: 8px;
+      background: var(--accent-soft);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .template-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+    }
+
+    .template-hint {
+      margin: -4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .template-input {
+      min-width: 0;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 11px;
+      background: var(--field);
+      color: var(--ink);
+      outline: none;
+    }
+
     .ratio-panel {
       display: grid;
       gap: 10px;
       padding: 14px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: white;
+      background: var(--panel-strong);
     }
 
     .ratio-panel h2 {
@@ -250,7 +441,7 @@
       padding: 10px;
       border: 1px solid #e3e8ef;
       border-radius: 8px;
-      background: #fbfcfe;
+      background: var(--field);
     }
 
     .ratio-name {
@@ -264,7 +455,7 @@
     .ratio-value {
       display: block;
       margin-top: 5px;
-      color: #1f2937;
+      color: var(--ink);
       font-size: 18px;
       font-weight: 900;
       line-height: 1.15;
@@ -312,8 +503,8 @@
       margin-bottom: 12px;
       padding: 8px 10px;
       border-radius: 8px;
-      background: #eef8f6;
-      color: #24514d;
+      background: var(--accent-soft);
+      color: var(--ink);
       font-size: 12px;
       font-weight: 900;
       line-height: 1.45;
@@ -326,7 +517,7 @@
       padding: 14px;
       border: 1px solid #e3e8ef;
       border-radius: 8px;
-      background: white;
+      background: var(--panel-strong);
     }
 
     .avatar {
@@ -350,14 +541,14 @@
     }
 
     .name {
-      color: #1f2937;
+      color: var(--ink);
       font-weight: 900;
     }
 
     .body {
       min-height: 148px;
       margin-top: 6px;
-      color: #111827;
+      color: var(--ink);
       line-height: 1.62;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
@@ -370,7 +561,7 @@
     .timeline-line {
       min-height: 72px;
       margin-top: 6px;
-      color: #111827;
+      color: var(--ink);
       line-height: 1.62;
       overflow-wrap: anywhere;
     }
@@ -380,6 +571,28 @@
       min-height: 0;
       margin-top: 0;
       white-space: pre-wrap;
+    }
+
+    .tweet-image {
+      display: none;
+      width: min(100%, 520px);
+      aspect-ratio: 16 / 9;
+      margin-top: 12px;
+      overflow: hidden;
+      border: 1px solid #e3e8ef;
+      border-radius: 8px;
+      background: var(--field);
+    }
+
+    .tweet-image.show {
+      display: block;
+    }
+
+    .tweet-image img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
     }
 
     .more-link {
@@ -457,8 +670,8 @@
     .check-list li {
       padding: 11px 12px;
       border-radius: 8px;
-      background: #f6f8fb;
-      color: #334155;
+      background: var(--field);
+      color: var(--ink);
       font-size: 13px;
       font-weight: 700;
       line-height: 1.55;
@@ -537,15 +750,9 @@
         grid-template-columns: 1fr;
       }
 
-      .timeline-actions {
-        justify-content: space-between;
-        gap: 8px;
-      }
-
-      .timeline-action {
-        min-width: 0;
-        flex: 1 1 0;
-        justify-content: center;
+      .template-form,
+      .template-item {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -557,35 +764,60 @@
         <div class="mark">X</div>
         <div>
           <h1>Xポスト文字数カウンター</h1>
-          <p class="lead">半角0.5、全角1、改行0.5、URL11.5のX換算で確認できます。</p>
+          <p class="lead">半角0.5、全角・絵文字1、改行0.5、URL11.5のX換算で確認できます。</p>
         </div>
       </div>
-      <a class="btn" href="https://x-article-generator.onrender.com" target="_blank" rel="noreferrer" aria-label="X記事ジェネレーターを開く">記事ジェネレーターへ</a>
+      <div class="top-actions">
+        <button class="btn" id="themeBtn" type="button" aria-pressed="false">ダークモード</button>
+        <a class="btn" href="https://x-article-generator.onrender.com" target="_blank" rel="noreferrer" aria-label="X記事ジェネレーターを開く">記事ジェネレーターへ</a>
+      </div>
     </header>
 
     <div class="layout">
       <section class="panel editor" aria-label="投稿文入力">
         <label>
           投稿文
-          <textarea id="postText" placeholder="ここにXへ投稿したい文章を入力してください。半角0.5、全角1、改行0.5、URL11.5で換算します。"></textarea>
+          <textarea id="postText" placeholder="ここにXへ投稿したい文章を入力してください。半角0.5、全角・絵文字1、改行0.5、URL11.5で換算します。"></textarea>
         </label>
 
         <div class="rule-box" aria-label="X上での文字数カウントのルール">
           <div class="rule-title">※X上での文字数カウントのルール</div>
           <ul class="rule-list">
             <li>半角文字: 0.5文字</li>
-            <li>全角文字: 1文字</li>
+            <li>全角・絵文字: 1文字</li>
             <li>改行: 0.5文字</li>
             <li>URL: 11.5文字</li>
           </ul>
         </div>
 
-        <div class="actions">
-          <button class="btn" id="formatBtn" type="button">整形</button>
-          <button class="btn" id="clearBtn" type="button">クリア</button>
-          <button class="btn primary" id="copyBtn" type="button">コピー</button>
+        <section class="tools-panel" aria-label="定型文とハッシュタグ">
+          <h2>定型文・ハッシュタグ</h2>
+          <div class="template-grid" id="templateList"></div>
+          <div class="template-form">
+            <input class="template-input" id="templateInput" type="text" placeholder="追加したい定型文やハッシュタグ">
+            <button class="btn small primary" id="addTemplateBtn" type="button">追加</button>
+          </div>
+          <p class="template-hint">日本語変換のEnterでは追加されません。キーボードで追加する場合は Ctrl+Enter / ⌘+Enter を使ってください。</p>
+        </section>
+
+        <input class="image-input" id="imageInput" type="file" accept="image/*">
+        <div class="image-preview" id="imagePreview" aria-live="polite">
+          <img id="imageThumb" alt="選択した画像のプレビュー">
+          <div class="image-meta">
+            <strong id="imageName">画像未選択</strong>
+            <span>画像はこの画面で確認できます。X投稿画面へは自動添付できません。</span>
+          </div>
+          <button class="btn" id="removeImageBtn" type="button">削除</button>
         </div>
-        <p class="lead">整形: 行末スペースを削除し、3つ以上続く改行を2つにまとめ、前後の空白を削除します。</p>
+
+        <div class="actions">
+          <button class="btn image" id="imageBtn" type="button" aria-label="画像を選択">▧ 画像</button>
+          <button class="btn" id="formatBtn" type="button">空白削除</button>
+          <button class="btn" id="clearBtn" type="button">クリア</button>
+          <button class="btn copy" id="copyBtn" type="button">□ コピー</button>
+          <button class="btn x-post" id="postToXBtn" type="button" aria-label="Xに投稿">X</button>
+        </div>
+        <p class="lead">空白削除: 半角スペースと改行をすべて削除します。</p>
 
         <div class="stats" aria-live="polite">
           <div class="stat">
@@ -597,10 +829,15 @@
             <span id="weightedCount" class="value">0</span>
           </div>
           <div class="stat">
-            <span class="label">行数</span>
-            <span id="lineCount" class="value">1</span>
+            <span class="label">改行</span>
+            <span id="lineBreakCount" class="value">0</span>
+          </div>
+          <div class="stat">
+            <span class="label">全角・絵文字</span>
+            <span id="specialWeightedCount" class="value">0</span>
           </div>
         </div>
+        <p class="lead">XボタンはX投稿画面だけを開きます。本文はコピーしてからX側で貼り付けてください。</p>
 
         <section class="ratio-panel" aria-label="文字種比率">
           <h2>文字種比率</h2>
@@ -663,6 +900,9 @@
                 <span id="timelineBody" class="body compact placeholder">入力した文章がここに表示されます。</span>
                 <span id="timelineMore" class="more-link">…さらに表示</span>
               </div>
+              <div class="tweet-image" id="timelineImageWrap">
+                <img id="timelineImage" alt="タイムライン表示の添付画像プレビュー">
+              </div>
               <div class="timeline-actions" aria-hidden="true">
                 <span class="timeline-action">○ 76</span>
                 <span class="timeline-action">↻ 76</span>
@@ -686,6 +926,9 @@
                 <span>詳細</span>
               </div>
               <div id="detailBody" class="body placeholder">入力した文章がここに全文表示されます。</div>
+              <div class="tweet-image" id="detailImageWrap">
+                <img id="detailImage" alt="全文詳細表示の添付画像プレビュー">
+              </div>
             </div>
           </div>
         </section>
@@ -702,10 +945,28 @@
 
   <script>
     const STORAGE_KEY = "xCounterDraft";
+    const THEME_KEY = "xCounterTheme";
+    const TEMPLATES_KEY = "xCounterTemplates";
+    const DELETED_DEFAULT_TEMPLATES_KEY = "xCounterDeletedDefaultTemplates";
+    const X_MAX_LENGTH = 140;
+    const DEFAULT_TEMPLATES = [
+      { id: "good-morning", text: "おはようございます。", position: "start" },
+      { id: "hello", text: "こんにちは！", position: "start" },
+      { id: "good-night", text: "おやすみなさい。", position: "end" },
+      { id: "bye", text: "またね。", position: "end" },
+      { id: "blog-beginner", text: "#ブログ初心者", position: "end" },
+      { id: "blog", text: "#ブログ", position: "end" },
+      { id: "ai", text: "#AI活用", position: "end" }
+    ];
     const postText = document.getElementById("postText");
     const rawCount = document.getElementById("rawCount");
     const weightedCount = document.getElementById("weightedCount");
-    const lineCount = document.getElementById("lineCount");
+    const lineBreakCount = document.getElementById("lineBreakCount");
+    const specialWeightedCount = document.getElementById("specialWeightedCount");
+    const templateList = document.getElementById("templateList");
+    const templateInput = document.getElementById("templateInput");
+    const addTemplateBtn = document.getElementById("addTemplateBtn");
+    const themeBtn = document.getElementById("themeBtn");
     const kanjiRatio = document.getElementById("kanjiRatio");
     const kanjiCount = document.getElementById("kanjiCount");
     const hiraganaRatio = document.getElementById("hiraganaRatio");
@@ -722,30 +983,58 @@
     const timelinePattern = document.getElementById("timelinePattern");
     const timelineBody = document.getElementById("timelineBody");
     const timelineMore = document.getElementById("timelineMore");
+    const timelineImageWrap = document.getElementById("timelineImageWrap");
+    const timelineImage = document.getElementById("timelineImage");
     const detailBody = document.getElementById("detailBody");
+    const detailImageWrap = document.getElementById("detailImageWrap");
+    const detailImage = document.getElementById("detailImage");
     const checkList = document.getElementById("checkList");
+    const imageInput = document.getElementById("imageInput");
+    const imageBtn = document.getElementById("imageBtn");
+    const imagePreview = document.getElementById("imagePreview");
+    const imageThumb = document.getElementById("imageThumb");
+    const imageName = document.getElementById("imageName");
+    const removeImageBtn = document.getElementById("removeImageBtn");
     const copyBtn = document.getElementById("copyBtn");
     const formatBtn = document.getElementById("formatBtn");
     const clearBtn = document.getElementById("clearBtn");
+    const postToXBtn = document.getElementById("postToXBtn");
     const toast = document.getElementById("toast");
     let toastTimer = 0;
+    let selectedImageUrl = "";
+    let templates = loadTemplates();
+    let editingTemplateId = "";
 
     function countCodePoints(value) {
       return Array.from(String(value || "")).length;
     }
 
     function countXWeighted(value) {
+      return getTweetMetrics(value).weighted;
+    }
+
+    function getTweetMetrics(value) {
       const text = String(value || "");
-      let total = 0;
+      const metrics = {
+        weighted: 0,
+        raw: countCodePoints(text),
+        lineBreaks: 0,
+        urls: 0,
+        urlWeight: 0,
+        specialChars: 0,
+        specialWeight: 0
+      };
       let lastIndex = 0;
       const urlPattern = /https?:\/\/[^\s]+/g;
       for (const match of text.matchAll(urlPattern)) {
-        total += countXWeightedPlain(text.slice(lastIndex, match.index));
-        total += 11.5;
+        addPlainMetrics(metrics, text.slice(lastIndex, match.index));
+        metrics.urls += 1;
+        metrics.urlWeight += 11.5;
+        metrics.weighted += 11.5;
         lastIndex = match.index + match[0].length;
       }
-      total += countXWeightedPlain(text.slice(lastIndex));
-      return total;
+      addPlainMetrics(metrics, text.slice(lastIndex));
+      return metrics;
     }
 
     function linkMatches(value) {
@@ -753,14 +1042,31 @@
     }
 
     function countXWeightedPlain(value) {
-      return Array.from(String(value || "")).reduce((total, char) => {
-        if (char === "\n") return total + 0.5;
-        return total + (isHalfWidthChar(char) ? 0.5 : 1);
-      }, 0);
+      const metrics = { weighted: 0, lineBreaks: 0, specialChars: 0, specialWeight: 0 };
+      addPlainMetrics(metrics, value);
+      return metrics.weighted;
+    }
+
+    function addPlainMetrics(metrics, value) {
+      Array.from(String(value || "")).forEach(char => {
+        const weight = getXWeightedCharWeight(char);
+        metrics.weighted += weight;
+        if (char === "\n") {
+          metrics.lineBreaks += 1;
+        } else if (!isHalfWidthChar(char)) {
+          metrics.specialChars += 1;
+          metrics.specialWeight += weight;
+        }
+      });
     }
 
     function isHalfWidthChar(char) {
       return /^[\u0020-\u007e\uff61-\uff9f]$/u.test(char);
+    }
+
+    function getXWeightedCharWeight(char) {
+      if (char === "\n") return 0.5;
+      return isHalfWidthChar(char) ? 0.5 : 1;
     }
 
     function formatWeighted(value) {
@@ -814,7 +1120,7 @@
       };
     }
 
-    function truncateForTimeline(value, pattern, limit = 140) {
+    function truncateForTimeline(value, pattern, limit = X_MAX_LENGTH) {
       if (pattern.key === "title-body") {
         return truncateByBlocks(makeNewlineBlocks(value), limit);
       }
@@ -827,7 +1133,7 @@
       return truncateSingleBlock(value, limit);
     }
 
-    function truncateSingleBlock(value, limit = 140) {
+    function truncateSingleBlock(value, limit = X_MAX_LENGTH) {
       const text = String(value || "");
       let result = "";
       let total = 0;
@@ -906,7 +1212,7 @@
       let text = "";
       let weight = 0;
       for (const char of Array.from(String(value || ""))) {
-        const nextWeight = char === "\n" ? 0.5 : (isHalfWidthChar(char) ? 0.5 : 1);
+        const nextWeight = getXWeightedCharWeight(char);
         if (weight + nextWeight > limit) {
           return { text, weight, truncated: true };
         }
@@ -970,7 +1276,7 @@
         .replaceAll("'", "&#039;");
     }
 
-    function buildChecks(text, raw, weighted, lines, pattern, timeline) {
+    function buildChecks(text, raw, weighted, lines, pattern, timeline, metrics) {
       const trimmed = text.trim();
       const urls = linkMatches(text);
       const tags = text.match(/#[^\s#]+/g) || [];
@@ -980,11 +1286,17 @@
         return [{ status: "", text: "投稿文を入力すると、文字数と注意点を自動で確認できます。" }];
       }
 
-      checks.push({ status: "", text: `X換算は${formatWeighted(weighted)}文字です。半角・改行は0.5文字、URLは11.5文字として計算しています。` });
+      checks.push({ status: weighted > X_MAX_LENGTH ? "over" : "", text: `X換算は${formatWeighted(weighted)}文字です。半角は0.5文字、全角・絵文字は1文字、改行は0.5文字、URLは11.5文字として計算しています。` });
       checks.push({ status: pattern.key === "half-space" ? "warning" : "", text: pattern.advice });
 
       if (urls.length) {
         checks.push({ status: "", text: `URL ${urls.length}件を、1件11.5文字として換算しています。` });
+      }
+      if (metrics.lineBreaks) {
+        checks.push({ status: "", text: `改行は${metrics.lineBreaks}個、合計${formatWeighted(metrics.lineBreaks * 0.5)}文字として換算しています。` });
+      }
+      if (metrics.specialChars) {
+        checks.push({ status: "", text: `全角・絵文字は${metrics.specialChars}個、合計${formatWeighted(metrics.specialWeight)}文字として換算しています。` });
       }
       if (tags.length > 4) {
         checks.push({ status: "warning", text: `ハッシュタグが${tags.length}個あります。本文が読みにくくならないか確認してください。` });
@@ -993,13 +1305,252 @@
         checks.push({ status: "warning", text: `改行が${lines}行あります。投稿では縦に長く見える可能性があります。` });
       }
       if (raw !== weighted) {
-        checks.push({ status: "", text: `実入力は${raw}文字、X換算は${formatWeighted(weighted)}文字です。` });
+        checks.push({ status: "", text: `見た目の入力は${raw}文字、X換算は${formatWeighted(weighted)}文字です。` });
       }
       if (timeline.truncated) {
         checks.push({ status: "warning", text: "タイムライン表示では、判定パターンに応じて「…さらに表示」として省略表示します。" });
       }
 
       return checks;
+    }
+
+    function loadTemplates() {
+      const raw = localStorage.getItem(TEMPLATES_KEY);
+      if (!raw) return getActiveDefaultTemplates();
+      try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) throw new Error("invalid templates");
+        return mergeDefaultTemplates(parsed
+          .filter(item => item && typeof item.text === "string")
+          .map(item => normalizeTemplate(item)));
+      } catch {
+        localStorage.removeItem(TEMPLATES_KEY);
+        return getActiveDefaultTemplates();
+      }
+    }
+
+    function loadDeletedDefaultTemplateIds() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(DELETED_DEFAULT_TEMPLATES_KEY) || "[]");
+        return new Set(Array.isArray(parsed) ? parsed.filter(id => typeof id === "string") : []);
+      } catch {
+        localStorage.removeItem(DELETED_DEFAULT_TEMPLATES_KEY);
+        return new Set();
+      }
+    }
+
+    function saveDeletedDefaultTemplateIds(deletedIds) {
+      localStorage.setItem(DELETED_DEFAULT_TEMPLATES_KEY, JSON.stringify([...deletedIds]));
+    }
+
+    function isDefaultTemplateId(templateId) {
+      return DEFAULT_TEMPLATES.some(item => item.id === templateId);
+    }
+
+    function getActiveDefaultTemplates() {
+      const deletedIds = loadDeletedDefaultTemplateIds();
+      return DEFAULT_TEMPLATES
+        .filter(item => !deletedIds.has(item.id))
+        .map(item => ({ ...item }));
+    }
+
+    function mergeDefaultTemplates(savedTemplates) {
+      const merged = [...savedTemplates];
+      const deletedIds = loadDeletedDefaultTemplateIds();
+      DEFAULT_TEMPLATES.forEach(defaultItem => {
+        if (deletedIds.has(defaultItem.id)) return;
+        const exists = merged.some(item => item.id === defaultItem.id || item.text === defaultItem.text);
+        if (!exists) merged.push({ ...defaultItem });
+      });
+      return merged.map(item => normalizeTemplate(item));
+    }
+
+    function normalizeTemplate(item) {
+      const text = item.text.trim();
+      const hashtag = isHashtagTemplate(text);
+      return {
+        id: item.id || `template-${Date.now()}-${Math.random()}`,
+        text,
+        position: hashtag ? "end" : (item.position === "end" ? "end" : "start")
+      };
+    }
+
+    function isHashtagTemplate(text) {
+      return String(text || "").trim().startsWith("#");
+    }
+
+    function saveTemplates() {
+      localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates));
+    }
+
+    function renderTemplates() {
+      templateList.innerHTML = templates.map(item => {
+        if (editingTemplateId === item.id) {
+          return `
+            <div class="template-item">
+              <input class="template-input" type="text" value="${escapeHtml(item.text)}" data-edit-text="${escapeHtml(item.id)}" aria-label="定型文を編集">
+              ${isHashtagTemplate(item.text)
+                ? '<span class="template-badge">文末</span>'
+                : `<select class="template-position" data-edit-position="${escapeHtml(item.id)}" aria-label="挿入位置">
+                    <option value="start" ${item.position === "start" ? "selected" : ""}>文頭</option>
+                    <option value="end" ${item.position === "end" ? "selected" : ""}>文末</option>
+                  </select>`}
+              <button class="btn small primary" type="button" data-save-template="${escapeHtml(item.id)}">保存</button>
+              <button class="btn small" type="button" data-cancel-edit-template="${escapeHtml(item.id)}">キャンセル</button>
+            </div>
+          `;
+        }
+        return `
+        <div class="template-item">
+          <span class="template-text">${escapeHtml(item.text)}</span>
+          ${isHashtagTemplate(item.text)
+            ? '<span class="template-badge">文末</span>'
+            : `<select class="template-position" data-position-template="${escapeHtml(item.id)}" aria-label="挿入位置">
+                <option value="start" ${item.position === "start" ? "selected" : ""}>文頭</option>
+                <option value="end" ${item.position === "end" ? "selected" : ""}>文末</option>
+              </select>`}
+          <button class="btn small" type="button" data-insert-template="${escapeHtml(item.id)}">挿入</button>
+          <button class="btn small" type="button" data-remove-template="${escapeHtml(item.id)}">本文から削除</button>
+          <button class="btn small" type="button" data-edit-template="${escapeHtml(item.id)}">編集</button>
+          <button class="btn small" type="button" data-delete-template="${escapeHtml(item.id)}">登録削除</button>
+        </div>
+      `;
+      }).join("");
+    }
+
+    function insertTemplate(template) {
+      const text = postText.value;
+      const templateText = template.text;
+      let cursor = 0;
+      if (template.position === "start") {
+        postText.value = [templateText, text.trimStart()].filter(Boolean).join("\n");
+        cursor = templateText.length;
+      } else {
+        postText.value = [text.trimEnd(), templateText].filter(Boolean).join("\n");
+        cursor = postText.value.length;
+      }
+      postText.focus();
+      postText.setSelectionRange(cursor, cursor);
+      update();
+      showToast("定型文を挿入しました");
+    }
+
+    function updateTemplatePosition(templateId, position) {
+      templates = templates.map(item => {
+        if (item.id !== templateId) return item;
+        if (isHashtagTemplate(item.text)) return { ...item, position: "end" };
+        return { ...item, position: position === "end" ? "end" : "start" };
+      });
+      saveTemplates();
+      renderTemplates();
+      update();
+    }
+
+    function deleteTemplate(templateId) {
+      if (isDefaultTemplateId(templateId)) {
+        const deletedIds = loadDeletedDefaultTemplateIds();
+        deletedIds.add(templateId);
+        saveDeletedDefaultTemplateIds(deletedIds);
+      }
+      templates = templates.filter(item => item.id !== templateId);
+      if (editingTemplateId === templateId) editingTemplateId = "";
+      saveTemplates();
+      renderTemplates();
+      update();
+      showToast("定型文を削除しました");
+    }
+
+    function startEditTemplate(templateId) {
+      editingTemplateId = templateId;
+      renderTemplates();
+    }
+
+    function cancelEditTemplate() {
+      editingTemplateId = "";
+      renderTemplates();
+    }
+
+    function saveEditedTemplate(templateId) {
+      const input = Array.from(templateList.querySelectorAll("[data-edit-text]"))
+        .find(element => element.dataset.editText === templateId);
+      const positionInput = Array.from(templateList.querySelectorAll("[data-edit-position]"))
+        .find(element => element.dataset.editPosition === templateId);
+      const nextText = input ? input.value.trim() : "";
+      if (!nextText) {
+        showToast("定型文を入力してください");
+        return;
+      }
+      templates = templates.map(item => {
+        if (item.id !== templateId) return item;
+        return normalizeTemplate({
+          ...item,
+          text: nextText,
+          position: positionInput ? positionInput.value : item.position
+        });
+      });
+      editingTemplateId = "";
+      saveTemplates();
+      renderTemplates();
+      update();
+      showToast("定型文を更新しました");
+    }
+
+    function removeTemplateFromPost(template) {
+      const before = postText.value;
+      const after = removeTemplateText(before, template.text).trim();
+      if (before.trim() === after) {
+        showToast("本文内に削除対象が見つかりません");
+        return;
+      }
+      postText.value = after;
+      update();
+      postText.focus();
+      showToast("本文から削除しました");
+    }
+
+    function removeTemplateText(text, templateText) {
+      const target = String(templateText || "").trim();
+      if (!target) return text;
+      if (isHashtagTemplate(target)) {
+        return String(text || "")
+          .split(/\r\n|\r|\n/)
+          .map(line => line.split(/\s+/).filter(part => part !== target).join(" ").trim())
+          .filter(Boolean)
+          .join("\n");
+      }
+      return String(text || "")
+        .split(/\r\n|\r|\n/)
+        .filter(line => line.trim() !== target)
+        .join("\n");
+    }
+
+    function addTemplate() {
+      const text = templateInput.value.trim();
+      if (!text) {
+        showToast("追加する定型文を入力してください");
+        return;
+      }
+      templates.push(normalizeTemplate({
+        id: `template-${Date.now()}`,
+        text,
+        position: isHashtagTemplate(text) ? "end" : "start"
+      }));
+      templateInput.value = "";
+      saveTemplates();
+      renderTemplates();
+      showToast("定型文を追加しました");
+    }
+
+    function applyTheme(theme) {
+      const isDark = theme === "dark";
+      document.body.classList.toggle("dark", isDark);
+      themeBtn.textContent = isDark ? "ライトモード" : "ダークモード";
+      themeBtn.setAttribute("aria-pressed", String(isDark));
+      localStorage.setItem(THEME_KEY, theme);
+    }
+
+    function toggleTheme() {
+      applyTheme(document.body.classList.contains("dark") ? "light" : "dark");
     }
 
     function saveDraft() {
@@ -1021,8 +1572,9 @@
 
     function update() {
       const text = postText.value;
-      const raw = countCodePoints(text);
-      const weighted = countXWeighted(text);
+      const metrics = getTweetMetrics(text);
+      const raw = metrics.raw;
+      const weighted = metrics.weighted;
       const lines = text ? text.split(/\r\n|\r|\n/).length : 1;
       const typeCounts = countCharacterTypes(text);
       const links = linkMatches(text);
@@ -1031,7 +1583,8 @@
 
       rawCount.textContent = String(raw);
       weightedCount.textContent = formatWeighted(weighted);
-      lineCount.textContent = String(lines);
+      lineBreakCount.textContent = String(metrics.lineBreaks);
+      specialWeightedCount.textContent = formatWeighted(metrics.specialWeight);
       setRatio(kanjiRatio, kanjiCount, typeCounts.kanji, raw, 30);
       setRatio(hiraganaRatio, hiraganaCount, typeCounts.hiragana, raw, 55);
       setRatio(katakanaRatio, katakanaCount, typeCounts.katakana, raw, 10);
@@ -1045,7 +1598,8 @@
       timelineMore.className = `more-link ${timeline.truncated ? "show" : ""}`.trim();
       detailBody.textContent = text.trim() || "入力した文章がここに全文表示されます。";
       detailBody.className = text.trim() ? "body" : "body placeholder";
-      checkList.innerHTML = buildChecks(text, raw, weighted, lines, pattern, timeline)
+      updateAttachedImages();
+      checkList.innerHTML = buildChecks(text, raw, weighted, lines, pattern, timeline, metrics)
         .map(item => `<li class="${item.status}">${escapeHtml(item.text)}</li>`)
         .join("");
       saveDraft();
@@ -1078,17 +1632,90 @@
       }
     }
 
+    function chooseImage() {
+      imageInput.click();
+    }
+
+    function setImagePreview(file) {
+      clearImagePreview(false);
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        showToast("画像ファイルを選択してください");
+        return;
+      }
+
+      selectedImageUrl = URL.createObjectURL(file);
+      renderSelectedImage(selectedImageUrl, file.name);
+      showToast("画像を選択しました");
+    }
+
+    function clearImagePreview(showMessage = true) {
+      if (selectedImageUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(selectedImageUrl);
+      }
+      selectedImageUrl = "";
+      imageInput.value = "";
+      imageThumb.removeAttribute("src");
+      imageName.textContent = "画像未選択";
+      imagePreview.classList.remove("show");
+      updateAttachedImages();
+      if (showMessage) showToast("画像を削除しました");
+    }
+
+    function renderSelectedImage(imageUrl, fileName) {
+      selectedImageUrl = imageUrl;
+      imageThumb.src = selectedImageUrl;
+      imageName.textContent = fileName || "選択した画像";
+      imagePreview.classList.add("show");
+      updateAttachedImages();
+    }
+
+    function updateAttachedImages() {
+      const targets = [
+        { wrap: timelineImageWrap, image: timelineImage },
+        { wrap: detailImageWrap, image: detailImage }
+      ];
+
+      targets.forEach(({ wrap, image }) => {
+        if (selectedImageUrl) {
+          image.src = selectedImageUrl;
+          wrap.classList.add("show");
+        } else {
+          image.removeAttribute("src");
+          wrap.classList.remove("show");
+        }
+      });
+    }
+
+    function postToX() {
+      const text = postText.value.trim();
+      if (!text) {
+        showToast("Xに投稿する本文を入力してください");
+        return;
+      }
+
+      const url = "https://x.com/intent/post";
+      const popup = window.open(url, "_blank", "noopener,noreferrer");
+      if (popup) {
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(postText.value).catch(() => {});
+        }
+        showToast("X投稿画面を開きました。本文はX側で貼り付けてください");
+      } else {
+        showToast("新規タブを開けませんでした。ブラウザのポップアップ設定を確認してください");
+      }
+    }
+
     function formatText() {
       postText.value = postText.value
-        .replace(/[ \t]+\n/g, "\n")
-        .replace(/\n{3,}/g, "\n\n")
-        .trim();
+        .replace(/[ \t\r\n]+/g, "");
       update();
-      showToast("改行を整えました");
+      showToast("半角スペースと改行を削除しました");
     }
 
     function clearText() {
       postText.value = "";
+      clearImagePreview(false);
       update();
       postText.focus();
       showToast("入力内容をクリアしました");
@@ -1102,10 +1729,65 @@
     }
 
     postText.addEventListener("input", update);
+    themeBtn.addEventListener("click", toggleTheme);
+    addTemplateBtn.addEventListener("click", addTemplate);
+    templateInput.addEventListener("keydown", event => {
+      if (event.isComposing || event.keyCode === 229) return;
+      if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        addTemplate();
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+      }
+    });
+    templateList.addEventListener("click", event => {
+      const insertId = event.target.dataset.insertTemplate;
+      const deleteId = event.target.dataset.deleteTemplate;
+      const removeId = event.target.dataset.removeTemplate;
+      const editId = event.target.dataset.editTemplate;
+      const saveId = event.target.dataset.saveTemplate;
+      const cancelId = event.target.dataset.cancelEditTemplate;
+      if (insertId) {
+        const template = templates.find(item => item.id === insertId);
+        if (template) insertTemplate(template);
+      }
+      if (removeId) {
+        const template = templates.find(item => item.id === removeId);
+        if (template) removeTemplateFromPost(template);
+      }
+      if (editId) startEditTemplate(editId);
+      if (saveId) saveEditedTemplate(saveId);
+      if (cancelId) cancelEditTemplate();
+      if (deleteId) deleteTemplate(deleteId);
+    });
+    templateList.addEventListener("change", event => {
+      const positionId = event.target.dataset.positionTemplate;
+      if (positionId) updateTemplatePosition(positionId, event.target.value);
+    });
+    templateList.addEventListener("keydown", event => {
+      if (!event.target.dataset.editText) return;
+      if (event.isComposing || event.keyCode === 229) return;
+      if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        saveEditedTemplate(event.target.dataset.editText);
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+      }
+    });
+    imageBtn.addEventListener("click", chooseImage);
+    imageInput.addEventListener("change", event => setImagePreview(event.target.files[0]));
+    removeImageBtn.addEventListener("click", () => clearImagePreview());
     copyBtn.addEventListener("click", copyText);
     formatBtn.addEventListener("click", formatText);
     clearBtn.addEventListener("click", clearText);
+    postToXBtn.addEventListener("click", postToX);
 
+    applyTheme(localStorage.getItem(THEME_KEY) || "light");
+    renderTemplates();
     restoreDraft();
     update();
   </script>
