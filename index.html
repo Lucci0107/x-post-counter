@@ -221,6 +221,13 @@
       filter: brightness(0.98);
     }
 
+    a.btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+
     .image-input {
       display: none;
     }
@@ -636,8 +643,9 @@
 
     .timeline-actions {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 34px;
+      gap: 12px 34px;
       margin-top: 18px;
       color: #8aa0bb;
       font-size: 13px;
@@ -815,7 +823,7 @@
           <button class="btn" id="formatBtn" type="button">空白削除</button>
           <button class="btn" id="clearBtn" type="button">クリア</button>
           <button class="btn copy" id="copyBtn" type="button">□ コピー</button>
-          <button class="btn x-post" id="postToXBtn" type="button" aria-label="Xに投稿">X</button>
+          <a class="btn x-post" id="postToXBtn" href="https://x.com/intent/post" target="_blank" rel="noopener noreferrer" aria-label="Xに投稿">X</a>
         </div>
         <p class="lead">空白削除: 半角スペースと改行をすべて削除します。</p>
 
@@ -949,6 +957,7 @@
     const TEMPLATES_KEY = "xCounterTemplates";
     const DELETED_DEFAULT_TEMPLATES_KEY = "xCounterDeletedDefaultTemplates";
     const X_MAX_LENGTH = 140;
+    const CHARACTER_SEGMENTER = new Intl.Segmenter("ja", { granularity: "grapheme" });
     const DEFAULT_TEMPLATES = [
       { id: "good-morning", text: "おはようございます。", position: "start" },
       { id: "hello", text: "こんにちは！", position: "start" },
@@ -1009,6 +1018,11 @@
       return Array.from(String(value || "")).length;
     }
 
+    function getWeightedCharacters(value) {
+      const text = String(value || "").replace(/\r\n|\r/g, "\n");
+      return Array.from(CHARACTER_SEGMENTER.segment(text), item => item.segment);
+    }
+
     function countXWeighted(value) {
       return getTweetMetrics(value).weighted;
     }
@@ -1048,7 +1062,7 @@
     }
 
     function addPlainMetrics(metrics, value) {
-      Array.from(String(value || "")).forEach(char => {
+      getWeightedCharacters(value).forEach(char => {
         const weight = getXWeightedCharWeight(char);
         metrics.weighted += weight;
         if (char === "\n") {
@@ -1061,12 +1075,12 @@
     }
 
     function isHalfWidthChar(char) {
-      return /^[\u0020-\u007e\uff61-\uff9f]$/u.test(char);
+      return /^[\u0020-\u007e\uff61-\uff9f]+$/u.test(char);
     }
 
     function getXWeightedCharWeight(char) {
       if (char === "\n") return 0.5;
-      return isHalfWidthChar(char) ? 0.5 : 1;
+      return isHalfWidthChar(char) ? countCodePoints(char) * 0.5 : 1;
     }
 
     function formatWeighted(value) {
@@ -1211,7 +1225,7 @@
     function takeWeightedPlain(value, limit) {
       let text = "";
       let weight = 0;
-      for (const char of Array.from(String(value || ""))) {
+      for (const char of getWeightedCharacters(value)) {
         const nextWeight = getXWeightedCharWeight(char);
         if (weight + nextWeight > limit) {
           return { text, weight, truncated: true };
@@ -1687,23 +1701,15 @@
       });
     }
 
-    function postToX() {
+    function postToX(event) {
       const text = postText.value.trim();
       if (!text) {
+        event.preventDefault();
         showToast("Xに投稿する本文を入力してください");
         return;
       }
 
-      const url = "https://x.com/intent/post";
-      const popup = window.open(url, "_blank", "noopener,noreferrer");
-      if (popup) {
-        if (navigator.clipboard && window.isSecureContext) {
-          navigator.clipboard.writeText(postText.value).catch(() => {});
-        }
-        showToast("X投稿画面を開きました。本文はX側で貼り付けてください");
-      } else {
-        showToast("新規タブを開けませんでした。ブラウザのポップアップ設定を確認してください");
-      }
+      showToast("X投稿画面を新しいタブで開きます。本文はX側で貼り付けてください");
     }
 
     function formatText() {
