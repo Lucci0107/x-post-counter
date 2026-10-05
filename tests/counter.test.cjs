@@ -1,43 +1,11 @@
 const assert = require('node:assert/strict');
-const { readFileSync } = require('node:fs');
-const { join } = require('node:path');
 const { test } = require('node:test');
-const vm = require('node:vm');
+const { createRuntime, twitterText } = require('./helpers/runtime.cjs');
+const { runtime, elements } = createRuntime();
 
-// 実際のHTML内のスクリプトを読み込み、DOMに依存しない計算を検証する。
-const html = readFileSync(join(__dirname, '..', 'index.html'), 'utf8');
-const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
-const elements = new Map();
-const storage = new Map();
-function createElement() {
-  return {
-    value: '', textContent: '', className: '', innerHTML: '',
-    classList: { toggle() {}, add() {}, remove() {} },
-    setAttribute() {}, removeAttribute() {}, addEventListener() {}
-  };
-}
-const runtime = vm.createContext({
-  Intl,
-  document: {
-    body: createElement(),
-    getElementById(id) {
-      if (!elements.has(id)) elements.set(id, createElement());
-      return elements.get(id);
-    }
-  },
-  localStorage: {
-    getItem: key => storage.get(key) ?? null,
-    setItem: (key, value) => storage.set(key, value),
-    removeItem: key => storage.delete(key)
-  },
-  setTimeout: () => 0,
-  clearTimeout() {}
-});
-vm.runInContext(script, runtime, { filename: 'index.html' });
-
-test('既存の半角・全角・改行・URLの換算を維持する', () => {
+test('基本文字・改行・URLを140文字基準で換算する', () => {
   for (const [text, expected] of [
-    ['', 0], ['ABC', 1.5], ['日本語', 3], ['ｶﾀｶﾅ', 2],
+    ['', 0], ['ABC', 1.5], ['日本語', 3], ['ｶﾀｶﾅ', 4],
     ['ABC\nあ', 3], ['https://example.com', 11.5],
     ['https://example.com https://example.org/long/path', 23.5]
   ]) {
@@ -63,11 +31,11 @@ test('改行コードの違いでX換算が増えない', () => {
   }
 });
 
-test('半角カタカナの濁点を全角・絵文字に含めない', () => {
+test('半角カタカナと濁点もX公式の日本語の重みで計算する', () => {
   const metrics = runtime.getTweetMetrics('ｶﾞﾊﾟ');
-  assert.equal(metrics.weighted, 2);
-  assert.equal(metrics.specialWeight, 0);
-  assert.equal(metrics.specialChars, 0);
+  assert.equal(metrics.weighted, 4);
+  assert.equal(metrics.specialWeight, 4);
+  assert.equal(metrics.raw, 4);
 });
 
 test('入力文字数と文字種比率は元のコードポイント数を保つ', () => {
@@ -90,13 +58,62 @@ test('タイムラインの140文字境界で複合絵文字を分断しない',
 });
 
 test('タイムラインでURLを途中で切らない', () => {
-  const prefix = `${'あ'.repeat(128)}A`;
+  const prefix = `${'あ'.repeat(128)}\n`;
   const url = 'https://example.com/very/long/path';
   const result = runtime.truncateSingleBlock(`${prefix}${url}\nB`);
   assert.equal(result.text, `${prefix}${url}`);
   assert.equal(result.truncated, true);
   assert.equal(runtime.getTweetMetrics(result.text).weighted, 140);
   assert.equal(runtime.truncateSingleBlock(`${'あ'.repeat(129)}${url}`).text, 'あ'.repeat(129));
+});
+
+test('URL直後の日本語・句読点と括弧を本文として数える', () => {
+  for (const [text, expected] of [
+    ['https://example.com日本語。', 15.5],
+    ['https://example.com/path).', 12.5],
+    ['(https://example.com)', 12.5],
+    ['example.com', 11.5],
+    ['https://', 4],
+    ['https://example.com/a(1)', 11.5]
+  ]) assert.equal(runtime.getTweetMetrics(text).weighted, expected, text);
+  assert.deepEqual(Array.from(runtime.linkMatches('https://example.com日本語。')), ['https://example.com']);
+});
+
+test('アクセント文字はNFC正規化し、X公式の重みで計算する', () => {
+  assert.equal(runtime.getTweetMetrics('café').weighted, 2);
+  assert.equal(runtime.getTweetMetrics('cafe\u0301').weighted, 2);
+  assert.equal(runtime.getTweetMetrics('cafe\u0301').raw, 5);
+});
+
+test('混在文の計算とタイムラインの切り取りが公式の重みと一致する', () => {
+  for (const text of [
+    '詳しくはhttps://example.comをご覧ください。',
+    '👩🏽‍💻 café ｶﾞ\nexample.com/path).',
+    '— “記号” ＡＢＣ\t123',
+    'a\u0301\u0327 日本語 👍🏽',
+    `${'あ'.repeat(127)}👨‍👩‍👧‍👦\nhttps://example.com日本語。`
+  ]) {
+    assert.equal(runtime.getTweetMetrics(text).weighted, twitterText.parseTweet(text).weightedLength / 2, text);
+    const preview = runtime.truncateSingleBlock(text);
+    assert.ok(twitterText.parseTweet(preview.text).weightedLength / 2 <= 140);
+  }
+});
+
+test('残り文字数・超過文字数と警告色が入力に追従する', () => {
+  const { runtime: app, elements: ui } = createRuntime();
+  for (const [text, label, remaining, over] of [
+    ['', '残り文字数', '140', false],
+    ['ABC', '残り文字数', '138.5', false],
+    ['あ'.repeat(140), '残り文字数', '0', false],
+    [`${'あ'.repeat(140)}A`, '超過文字数', '0.5', true]
+  ]) {
+    ui.get('postText').value = text;
+    app.update();
+    assert.equal(ui.get('remainingLabel').textContent, label);
+    assert.equal(ui.get('remainingCount').textContent, remaining);
+    assert.equal(ui.get('weightedCount').classList.contains('over'), over);
+    assert.equal(ui.get('remainingCount').classList.contains('over'), over);
+  }
 });
 
 test('Xリンクは空の本文を止め、入力済みなら遷移を許可する', () => {
