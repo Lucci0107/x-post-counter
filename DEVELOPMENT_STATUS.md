@@ -38,7 +38,7 @@
 | 保存失敗時の操作継続 | NOT_STARTED | CONFIRMED_COMPLETE | ストレージへのアクセス・読み取り・容量不足で、案内・編集・計算・コピー・取り消し・テーマ・定型文を検証 |
 | 自動回帰テスト | NOT_STARTED | CONFIRMED_COMPLETE | `npm test`、29件成功 |
 | 実ブラウザ検証 | IMPLEMENTED_NEEDS_VALIDATION | CONFIRMED_COMPLETE | Chromiumで55項目成功。320〜1280pxの10幅、ライト・ダークの画面確認 |
-| GitHub Actions | NOT_STARTED | IMPLEMENTED_NEEDS_VALIDATION | Node.js 20 / 24で回帰テストと配信用ライブラリの再現性を確認するワークフローを追加。push後の実行結果を確認する |
+| GitHub Actions | NOT_STARTED | CONFIRMED_COMPLETE | 実装commit `de8f30a` のpush・PRでNode.js 20 / 24の全ジョブが成功。回帰テストと配信用ライブラリの再現性を確認 |
 | 既存の本番配信 | CONFIRMED_COMPLETE | CONFIRMED_COMPLETE | HTML・faviconともHTTP 200、既存deployはready |
 | 今回の修正版の本番公開 | NOT_STARTED | BLOCKED | 自動承認審査が、具体的な本番反映の明示承認不足としてアップロードを拒否。反映時はHTML・favicon・vendorを含める |
 | 今回の修正版の本番QA | NOT_STARTED | BLOCKED | 本番反映の承認・完了後に実施する |
@@ -63,5 +63,7 @@
 ## 検証の範囲と次の工程
 
 回帰テスト29件、ローカルのブラウザ55項目、半角カタカナの追加ブラウザ確認、ライト・ダークの描画を確認した。JavaScript実行時エラー・コンソールエラーはなかった。Safari実機やXへの実際の投稿は実施していない。Xリンクは外部投稿画面への遷移先と新規タブの動作を検証し、投稿自体は行っていない。
+
+GitHub Actionsも実行済みで、Node.js 20 / 24の回帰テストと配信用ライブラリの再生成が成功した。実装commit `de8f30a` の記録: [PRの実行結果](https://github.com/Lucci0107/x-post-counter/actions/runs/37321594962)、[pushの実行結果](https://github.com/Lucci0107/x-post-counter/actions/runs/37321594529)。
 
 承認後は既存Netlifyサイトへ修正版をアップロードし、HTML・favicon・配信用ライブラリとライセンスの配信内容、HTTP応答、本番の主要操作、モバイル表示を確認する。新しいサイトや別の配信方式は作らない。
