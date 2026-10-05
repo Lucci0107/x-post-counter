@@ -221,6 +221,18 @@
       filter: brightness(0.98);
     }
 
+    .btn:disabled {
+      cursor: default;
+      opacity: 0.45;
+    }
+
+    a.btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+
     .image-input {
       display: none;
     }
@@ -270,6 +282,21 @@
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
+    }
+
+    .stats.primary {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .storage-notice {
+      margin: 0;
+      padding: 12px;
+      border: 1px solid var(--warn);
+      border-radius: 8px;
+      color: var(--ink);
+      background: var(--field);
+      font-size: 13px;
+      line-height: 1.6;
     }
 
     .stat {
@@ -336,10 +363,19 @@
       background: var(--panel-strong);
     }
 
-    .tools-panel h2 {
-      margin: 0;
+    .tools-panel summary {
+      cursor: pointer;
       font-size: 15px;
-      letter-spacing: 0;
+      font-weight: 800;
+    }
+
+    .tools-panel[open] summary {
+      margin-bottom: 12px;
+    }
+
+    .tools-panel summary:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 4px;
     }
 
     .template-grid {
@@ -636,8 +672,9 @@
 
     .timeline-actions {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 34px;
+      gap: 12px 34px;
       margin-top: 18px;
       color: #8aa0bb;
       font-size: 13px;
@@ -730,6 +767,10 @@
         display: grid;
       }
 
+      textarea {
+        min-height: 240px;
+      }
+
       .actions {
         justify-content: stretch;
       }
@@ -764,7 +805,7 @@
         <div class="mark">X</div>
         <div>
           <h1>Xポスト文字数カウンター</h1>
-          <p class="lead">半角0.5、全角・絵文字1、改行0.5、URL11.5のX換算で確認できます。</p>
+          <p class="lead">X換算・残り文字数・投稿プレビューをまとめて確認できます。</p>
         </div>
       </div>
       <div class="top-actions">
@@ -777,28 +818,40 @@
       <section class="panel editor" aria-label="投稿文入力">
         <label>
           投稿文
-          <textarea id="postText" placeholder="ここにXへ投稿したい文章を入力してください。半角0.5、全角・絵文字1、改行0.5、URL11.5で換算します。"></textarea>
+          <textarea id="postText" placeholder="ここにXへ投稿したい文章を入力してください。入力すると文字数と残り文字数が更新されます。"></textarea>
         </label>
 
-        <div class="rule-box" aria-label="X上での文字数カウントのルール">
-          <div class="rule-title">※X上での文字数カウントのルール</div>
-          <ul class="rule-list">
-            <li>半角文字: 0.5文字</li>
-            <li>全角・絵文字: 1文字</li>
-            <li>改行: 0.5文字</li>
-            <li>URL: 11.5文字</li>
-          </ul>
+        <div class="stats primary" aria-live="polite">
+          <div class="stat">
+            <span class="label">X換算 / 140文字</span>
+            <span id="weightedCount" class="value">0</span>
+          </div>
+          <div class="stat">
+            <span id="remainingLabel" class="label">残り文字数</span>
+            <span id="remainingCount" class="value">140</span>
+          </div>
         </div>
 
-        <section class="tools-panel" aria-label="定型文とハッシュタグ">
-          <h2>定型文・ハッシュタグ</h2>
+        <div class="actions">
+          <button class="btn copy" id="copyBtn" type="button">□ コピー</button>
+          <a class="btn x-post" id="postToXBtn" href="https://x.com/intent/post" target="_blank" rel="noopener noreferrer" aria-label="Xに投稿">X</a>
+          <button class="btn" id="undoBtn" type="button" disabled aria-label="直前のクリア・空白削除を元に戻す">元に戻す</button>
+          <button class="btn" id="formatBtn" type="button">空白削除</button>
+          <button class="btn" id="clearBtn" type="button">クリア</button>
+          <button class="btn image" id="imageBtn" type="button" aria-label="画像を選択">▧ 画像</button>
+        </div>
+        <p class="lead">XボタンはX投稿画面を開きます。本文はコピーしてX側で貼り付けてください。</p>
+        <p id="storageNotice" class="storage-notice" role="status" hidden></p>
+
+        <details class="tools-panel" id="templatesPanel">
+          <summary>定型文・ハッシュタグ</summary>
           <div class="template-grid" id="templateList"></div>
           <div class="template-form">
             <input class="template-input" id="templateInput" type="text" placeholder="追加したい定型文やハッシュタグ">
             <button class="btn small primary" id="addTemplateBtn" type="button">追加</button>
           </div>
           <p class="template-hint">日本語変換のEnterでは追加されません。キーボードで追加する場合は Ctrl+Enter / ⌘+Enter を使ってください。</p>
-        </section>
+        </details>
 
         <input class="image-input" id="imageInput" type="file" accept="image/*">
         <div class="image-preview" id="imagePreview" aria-live="polite">
@@ -810,14 +863,16 @@
           <button class="btn" id="removeImageBtn" type="button">削除</button>
         </div>
 
-        <div class="actions">
-          <button class="btn image" id="imageBtn" type="button" aria-label="画像を選択">▧ 画像</button>
-          <button class="btn" id="formatBtn" type="button">空白削除</button>
-          <button class="btn" id="clearBtn" type="button">クリア</button>
-          <button class="btn copy" id="copyBtn" type="button">□ コピー</button>
-          <button class="btn x-post" id="postToXBtn" type="button" aria-label="Xに投稿">X</button>
+        <div class="rule-box" aria-label="X換算の計算ルール">
+          <div class="rule-title">X公式のカウントを2で割り、140文字基準で表示しています。</div>
+          <ul class="rule-list">
+            <li>半角英数字など: 0.5文字</li>
+            <li>日本語・絵文字: 1文字</li>
+            <li>改行: 0.5文字</li>
+            <li>URL: 11.5文字</li>
+          </ul>
+          <span>半角カタカナも日本語として数えます。タイムラインの省略は近似表示です。</span>
         </div>
-        <p class="lead">空白削除: 半角スペースと改行をすべて削除します。</p>
 
         <div class="stats" aria-live="polite">
           <div class="stat">
@@ -825,19 +880,15 @@
             <span id="rawCount" class="value">0</span>
           </div>
           <div class="stat">
-            <span class="label">X換算</span>
-            <span id="weightedCount" class="value">0</span>
-          </div>
-          <div class="stat">
             <span class="label">改行</span>
             <span id="lineBreakCount" class="value">0</span>
           </div>
           <div class="stat">
-            <span class="label">全角・絵文字</span>
+            <span class="label">日本語・絵文字など</span>
             <span id="specialWeightedCount" class="value">0</span>
           </div>
         </div>
-        <p class="lead">XボタンはX投稿画面だけを開きます。本文はコピーしてからX側で貼り付けてください。</p>
+        <p class="lead">空白削除は半角スペースと改行を削除します。「元に戻す」で直前のクリア・空白削除を取り消せます。</p>
 
         <section class="ratio-panel" aria-label="文字種比率">
           <h2>文字種比率</h2>
@@ -876,7 +927,7 @@
             <div class="ratio-item">
               <span class="ratio-name">リンク数</span>
               <span id="linkCount" class="ratio-value">0</span>
-              <span class="ratio-count">http / https</span>
+              <span class="ratio-count">ドメインのみのURLにも対応</span>
             </div>
           </div>
         </section>
@@ -885,7 +936,7 @@
       <aside class="side">
         <section class="panel preview timeline-preview" aria-label="タイムライン表示">
           <h2>タイムライン表示</h2>
-          <p class="preview-note">画像の4パターンを参考に、改行・半角スペース・段落構造を見て近似表示します。</p>
+          <p class="preview-note">改行・半角スペース・段落構造をもとに、Xタイムラインの省略を近似表示します。</p>
           <div id="timelinePattern" class="pattern-note">判定: 入力待ち</div>
           <div class="tweet">
             <div class="avatar" aria-hidden="true">X</div>
@@ -943,12 +994,17 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+  <script src="vendor/twitter-text.js"></script>
   <script>
     const STORAGE_KEY = "xCounterDraft";
     const THEME_KEY = "xCounterTheme";
     const TEMPLATES_KEY = "xCounterTemplates";
     const DELETED_DEFAULT_TEMPLATES_KEY = "xCounterDeletedDefaultTemplates";
-    const X_MAX_LENGTH = 140;
+    const X_CONFIG = twitterText.configs.defaults;
+    const X_DISPLAY_SCALE = 2;
+    const X_MAX_LENGTH = X_CONFIG.maxWeightedTweetLength / X_DISPLAY_SCALE;
+    const X_URL_WEIGHT = X_CONFIG.transformedURLLength / X_DISPLAY_SCALE;
+    const CHARACTER_SEGMENTER = new Intl.Segmenter("ja", { granularity: "grapheme" });
     const DEFAULT_TEMPLATES = [
       { id: "good-morning", text: "おはようございます。", position: "start" },
       { id: "hello", text: "こんにちは！", position: "start" },
@@ -961,6 +1017,9 @@
     const postText = document.getElementById("postText");
     const rawCount = document.getElementById("rawCount");
     const weightedCount = document.getElementById("weightedCount");
+    const remainingCount = document.getElementById("remainingCount");
+    const remainingLabel = document.getElementById("remainingLabel");
+    const storageNotice = document.getElementById("storageNotice");
     const lineBreakCount = document.getElementById("lineBreakCount");
     const specialWeightedCount = document.getElementById("specialWeightedCount");
     const templateList = document.getElementById("templateList");
@@ -998,15 +1057,83 @@
     const copyBtn = document.getElementById("copyBtn");
     const formatBtn = document.getElementById("formatBtn");
     const clearBtn = document.getElementById("clearBtn");
+    const undoBtn = document.getElementById("undoBtn");
     const postToXBtn = document.getElementById("postToXBtn");
     const toast = document.getElementById("toast");
     let toastTimer = 0;
     let selectedImageUrl = "";
+    let selectedImageFile = null;
+    let undoSnapshot = null;
+    const sessionValues = new Map();
     let templates = loadTemplates();
     let editingTemplateId = "";
 
+    function showStorageUnavailable() {
+      storageNotice.hidden = false;
+      storageNotice.textContent = "保存できません。編集・計算・コピーは引き続き使えますが、この画面を閉じると今回の変更は失われます。必要な本文はコピーしてください。";
+    }
+
+    function readStoredValue(key) {
+      if (sessionValues.has(key)) return sessionValues.get(key);
+      try {
+        const value = localStorage.getItem(key);
+        sessionValues.set(key, value);
+        return value;
+      } catch {
+        showStorageUnavailable();
+        return null;
+      }
+    }
+
+    function writeStoredValue(key, value) {
+      sessionValues.set(key, value);
+      try {
+        localStorage.setItem(key, value);
+      } catch {
+        showStorageUnavailable();
+      }
+    }
+
+    function removeStoredValue(key) {
+      sessionValues.set(key, null);
+      try {
+        localStorage.removeItem(key);
+      } catch {
+        showStorageUnavailable();
+      }
+    }
+
     function countCodePoints(value) {
       return Array.from(String(value || "")).length;
+    }
+
+    function getWeightedCharacters(value) {
+      const text = normalizeCountingText(value);
+      return Array.from(CHARACTER_SEGMENTER.segment(text), item => item.segment);
+    }
+
+    function normalizeCountingText(value) {
+      return String(value || "").replace(/\r\n|\r/g, "\n").normalize("NFC");
+    }
+
+    function getTweetTokens(value) {
+      const text = normalizeCountingText(value);
+      const tokens = [];
+      let lastIndex = 0;
+      const addPlain = plain => {
+        getWeightedCharacters(plain).forEach(char => tokens.push({
+          text: char,
+          weight: getXWeightedCharWeight(char),
+          isUrl: false
+        }));
+      };
+      twitterText.extractUrlsWithIndices(text).forEach(match => {
+        addPlain(text.slice(lastIndex, match.indices[0]));
+        tokens.push({ text: match.url, weight: X_URL_WEIGHT, isUrl: true });
+        lastIndex = match.indices[1];
+      });
+      addPlain(text.slice(lastIndex));
+      return tokens;
     }
 
     function countXWeighted(value) {
@@ -1024,49 +1151,31 @@
         specialChars: 0,
         specialWeight: 0
       };
-      let lastIndex = 0;
-      const urlPattern = /https?:\/\/[^\s]+/g;
-      for (const match of text.matchAll(urlPattern)) {
-        addPlainMetrics(metrics, text.slice(lastIndex, match.index));
-        metrics.urls += 1;
-        metrics.urlWeight += 11.5;
-        metrics.weighted += 11.5;
-        lastIndex = match.index + match[0].length;
-      }
-      addPlainMetrics(metrics, text.slice(lastIndex));
+      getTweetTokens(text).forEach(token => {
+        metrics.weighted += token.weight;
+        if (token.isUrl) {
+          metrics.urls += 1;
+          metrics.urlWeight += token.weight;
+        } else if (token.text === "\n") {
+          metrics.lineBreaks += 1;
+        } else if (token.weight > 0.5) {
+          metrics.specialChars += 1;
+          metrics.specialWeight += token.weight;
+        }
+      });
       return metrics;
     }
 
     function linkMatches(value) {
-      return String(value || "").match(/https?:\/\/[^\s]+/g) || [];
-    }
-
-    function countXWeightedPlain(value) {
-      const metrics = { weighted: 0, lineBreaks: 0, specialChars: 0, specialWeight: 0 };
-      addPlainMetrics(metrics, value);
-      return metrics.weighted;
-    }
-
-    function addPlainMetrics(metrics, value) {
-      Array.from(String(value || "")).forEach(char => {
-        const weight = getXWeightedCharWeight(char);
-        metrics.weighted += weight;
-        if (char === "\n") {
-          metrics.lineBreaks += 1;
-        } else if (!isHalfWidthChar(char)) {
-          metrics.specialChars += 1;
-          metrics.specialWeight += weight;
-        }
-      });
-    }
-
-    function isHalfWidthChar(char) {
-      return /^[\u0020-\u007e\uff61-\uff9f]$/u.test(char);
+      return twitterText.extractUrlsWithIndices(normalizeCountingText(value)).map(match => match.url);
     }
 
     function getXWeightedCharWeight(char) {
-      if (char === "\n") return 0.5;
-      return isHalfWidthChar(char) ? 0.5 : 1;
+      const points = Array.from(char);
+      if (points.length !== 1) return twitterText.parseTweet(char).weightedLength / X_DISPLAY_SCALE;
+      const codePoint = char.codePointAt(0);
+      const range = X_CONFIG.ranges.find(item => codePoint >= item.start && codePoint <= item.end);
+      return (range ? range.weight : X_CONFIG.defaultWeight) / X_CONFIG.scale / X_DISPLAY_SCALE;
     }
 
     function formatWeighted(value) {
@@ -1134,31 +1243,16 @@
     }
 
     function truncateSingleBlock(value, limit = X_MAX_LENGTH) {
-      const text = String(value || "");
       let result = "";
       let total = 0;
-      let index = 0;
-      const urlPattern = /https?:\/\/[^\s]+/g;
-
-      for (const match of text.matchAll(urlPattern)) {
-        const before = text.slice(index, match.index);
-        const beforeResult = takeWeightedPlain(before, limit - total);
-        result += beforeResult.text;
-        total += beforeResult.weight;
-        if (beforeResult.truncated || total + 11.5 > limit) {
+      for (const token of getTweetTokens(value)) {
+        if (total + token.weight > limit) {
           return { text: result.trimEnd(), truncated: true };
         }
-        result += match[0];
-        total += 11.5;
-        index = match.index + match[0].length;
+        result += token.text;
+        total += token.weight;
       }
-
-      const restResult = takeWeightedPlain(text.slice(index), limit - total);
-      result += restResult.text;
-      return {
-        text: result.trimEnd(),
-        truncated: restResult.truncated
-      };
+      return { text: result.trimEnd(), truncated: false };
     }
 
     function makeNewlineBlocks(value) {
@@ -1206,20 +1300,6 @@
         total = nextTotal;
       }
       return { text: shown.trimEnd(), truncated: false };
-    }
-
-    function takeWeightedPlain(value, limit) {
-      let text = "";
-      let weight = 0;
-      for (const char of Array.from(String(value || ""))) {
-        const nextWeight = getXWeightedCharWeight(char);
-        if (weight + nextWeight > limit) {
-          return { text, weight, truncated: true };
-        }
-        text += char;
-        weight += nextWeight;
-      }
-      return { text, weight, truncated: false };
     }
 
     function countCharacterTypes(value) {
@@ -1286,7 +1366,7 @@
         return [{ status: "", text: "投稿文を入力すると、文字数と注意点を自動で確認できます。" }];
       }
 
-      checks.push({ status: weighted > X_MAX_LENGTH ? "over" : "", text: `X換算は${formatWeighted(weighted)}文字です。半角は0.5文字、全角・絵文字は1文字、改行は0.5文字、URLは11.5文字として計算しています。` });
+      checks.push({ status: weighted > X_MAX_LENGTH ? "over" : "", text: `X換算は${formatWeighted(weighted)}文字です。X公式のカウントを2で割り、${X_MAX_LENGTH}文字基準で表示しています。` });
       checks.push({ status: pattern.key === "half-space" ? "warning" : "", text: pattern.advice });
 
       if (urls.length) {
@@ -1296,7 +1376,7 @@
         checks.push({ status: "", text: `改行は${metrics.lineBreaks}個、合計${formatWeighted(metrics.lineBreaks * 0.5)}文字として換算しています。` });
       }
       if (metrics.specialChars) {
-        checks.push({ status: "", text: `全角・絵文字は${metrics.specialChars}個、合計${formatWeighted(metrics.specialWeight)}文字として換算しています。` });
+        checks.push({ status: "", text: `日本語・絵文字などは、合計${formatWeighted(metrics.specialWeight)}文字として換算しています。` });
       }
       if (tags.length > 4) {
         checks.push({ status: "warning", text: `ハッシュタグが${tags.length}個あります。本文が読みにくくならないか確認してください。` });
@@ -1315,7 +1395,7 @@
     }
 
     function loadTemplates() {
-      const raw = localStorage.getItem(TEMPLATES_KEY);
+      const raw = readStoredValue(TEMPLATES_KEY);
       if (!raw) return getActiveDefaultTemplates();
       try {
         const parsed = JSON.parse(raw);
@@ -1324,23 +1404,23 @@
           .filter(item => item && typeof item.text === "string")
           .map(item => normalizeTemplate(item)));
       } catch {
-        localStorage.removeItem(TEMPLATES_KEY);
+        removeStoredValue(TEMPLATES_KEY);
         return getActiveDefaultTemplates();
       }
     }
 
     function loadDeletedDefaultTemplateIds() {
       try {
-        const parsed = JSON.parse(localStorage.getItem(DELETED_DEFAULT_TEMPLATES_KEY) || "[]");
+        const parsed = JSON.parse(readStoredValue(DELETED_DEFAULT_TEMPLATES_KEY) || "[]");
         return new Set(Array.isArray(parsed) ? parsed.filter(id => typeof id === "string") : []);
       } catch {
-        localStorage.removeItem(DELETED_DEFAULT_TEMPLATES_KEY);
+        removeStoredValue(DELETED_DEFAULT_TEMPLATES_KEY);
         return new Set();
       }
     }
 
     function saveDeletedDefaultTemplateIds(deletedIds) {
-      localStorage.setItem(DELETED_DEFAULT_TEMPLATES_KEY, JSON.stringify([...deletedIds]));
+      writeStoredValue(DELETED_DEFAULT_TEMPLATES_KEY, JSON.stringify([...deletedIds]));
     }
 
     function isDefaultTemplateId(templateId) {
@@ -1380,7 +1460,7 @@
     }
 
     function saveTemplates() {
-      localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates));
+      writeStoredValue(TEMPLATES_KEY, JSON.stringify(templates));
     }
 
     function renderTemplates() {
@@ -1419,6 +1499,7 @@
     }
 
     function insertTemplate(template) {
+      clearUndoState();
       const text = postText.value;
       const templateText = template.text;
       let cursor = 0;
@@ -1503,6 +1584,7 @@
         return;
       }
       postText.value = after;
+      clearUndoState();
       update();
       postText.focus();
       showToast("本文から削除しました");
@@ -1546,7 +1628,7 @@
       document.body.classList.toggle("dark", isDark);
       themeBtn.textContent = isDark ? "ライトモード" : "ダークモード";
       themeBtn.setAttribute("aria-pressed", String(isDark));
-      localStorage.setItem(THEME_KEY, theme);
+      writeStoredValue(THEME_KEY, theme);
     }
 
     function toggleTheme() {
@@ -1554,19 +1636,20 @@
     }
 
     function saveDraft() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      writeStoredValue(STORAGE_KEY, JSON.stringify({
         text: postText.value
       }));
     }
 
     function restoreDraft() {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = readStoredValue(STORAGE_KEY);
       if (!raw) return;
       try {
         const data = JSON.parse(raw);
-        postText.value = data.text || "";
+        if (!data || typeof data.text !== "string") throw new Error("invalid draft");
+        postText.value = data.text;
       } catch {
-        localStorage.removeItem(STORAGE_KEY);
+        removeStoredValue(STORAGE_KEY);
       }
     }
 
@@ -1583,6 +1666,12 @@
 
       rawCount.textContent = String(raw);
       weightedCount.textContent = formatWeighted(weighted);
+      const remaining = X_MAX_LENGTH - weighted;
+      const isOver = remaining < 0;
+      remainingCount.textContent = formatWeighted(Math.abs(remaining));
+      remainingLabel.textContent = isOver ? "超過文字数" : "残り文字数";
+      weightedCount.classList.toggle("over", isOver);
+      remainingCount.classList.toggle("over", isOver);
       lineBreakCount.textContent = String(metrics.lineBreaks);
       specialWeightedCount.textContent = formatWeighted(metrics.specialWeight);
       setRatio(kanjiRatio, kanjiCount, typeCounts.kanji, raw, 30);
@@ -1636,17 +1725,19 @@
       imageInput.click();
     }
 
-    function setImagePreview(file) {
-      clearImagePreview(false);
+    function setImagePreview(file, showMessage = true) {
       if (!file) return;
       if (!file.type.startsWith("image/")) {
         showToast("画像ファイルを選択してください");
         return;
       }
 
+      clearUndoState();
+      clearImagePreview(false);
+      selectedImageFile = file;
       selectedImageUrl = URL.createObjectURL(file);
       renderSelectedImage(selectedImageUrl, file.name);
-      showToast("画像を選択しました");
+      if (showMessage) showToast("画像を選択しました");
     }
 
     function clearImagePreview(showMessage = true) {
@@ -1654,6 +1745,7 @@
         URL.revokeObjectURL(selectedImageUrl);
       }
       selectedImageUrl = "";
+      selectedImageFile = null;
       imageInput.value = "";
       imageThumb.removeAttribute("src");
       imageName.textContent = "画像未選択";
@@ -1687,38 +1779,70 @@
       });
     }
 
-    function postToX() {
+    function postToX(event) {
       const text = postText.value.trim();
       if (!text) {
+        event.preventDefault();
         showToast("Xに投稿する本文を入力してください");
         return;
       }
 
-      const url = "https://x.com/intent/post";
-      const popup = window.open(url, "_blank", "noopener,noreferrer");
-      if (popup) {
-        if (navigator.clipboard && window.isSecureContext) {
-          navigator.clipboard.writeText(postText.value).catch(() => {});
-        }
-        showToast("X投稿画面を開きました。本文はX側で貼り付けてください");
-      } else {
-        showToast("新規タブを開けませんでした。ブラウザのポップアップ設定を確認してください");
-      }
+      showToast("X投稿画面を新しいタブで開きます。本文はX側で貼り付けてください");
     }
 
     function formatText() {
-      postText.value = postText.value
-        .replace(/[ \t\r\n]+/g, "");
+      const formatted = postText.value.replace(/[ \t\r\n]+/g, "");
+      if (formatted === postText.value) {
+        showToast("削除する半角スペースや改行はありません");
+        return;
+      }
+      rememberEditorState();
+      postText.value = formatted;
       update();
       showToast("半角スペースと改行を削除しました");
     }
 
     function clearText() {
+      if (!postText.value && !selectedImageFile) {
+        showToast("入力はすでに空です");
+        return;
+      }
+      rememberEditorState();
       postText.value = "";
       clearImagePreview(false);
       update();
       postText.focus();
       showToast("入力内容をクリアしました");
+    }
+
+    function rememberEditorState() {
+      undoSnapshot = {
+        text: postText.value,
+        selectionStart: postText.selectionStart,
+        selectionEnd: postText.selectionEnd,
+        image: selectedImageFile
+      };
+      undoBtn.disabled = false;
+    }
+
+    function clearUndoState() {
+      undoSnapshot = null;
+      undoBtn.disabled = true;
+    }
+
+    function undoLastAction() {
+      if (!undoSnapshot) return;
+      const snapshot = undoSnapshot;
+      clearUndoState();
+      postText.value = snapshot.text;
+      if (snapshot.image !== selectedImageFile) {
+        if (snapshot.image) setImagePreview(snapshot.image, false);
+        else clearImagePreview(false);
+      }
+      update();
+      postText.focus();
+      postText.setSelectionRange(snapshot.selectionStart, snapshot.selectionEnd);
+      showToast("直前の操作を元に戻しました");
     }
 
     function showToast(message) {
@@ -1728,7 +1852,10 @@
       toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
     }
 
-    postText.addEventListener("input", update);
+    postText.addEventListener("input", () => {
+      clearUndoState();
+      update();
+    });
     themeBtn.addEventListener("click", toggleTheme);
     addTemplateBtn.addEventListener("click", addTemplate);
     templateInput.addEventListener("keydown", event => {
@@ -1780,13 +1907,17 @@
     });
     imageBtn.addEventListener("click", chooseImage);
     imageInput.addEventListener("change", event => setImagePreview(event.target.files[0]));
-    removeImageBtn.addEventListener("click", () => clearImagePreview());
+    removeImageBtn.addEventListener("click", () => {
+      clearUndoState();
+      clearImagePreview();
+    });
     copyBtn.addEventListener("click", copyText);
     formatBtn.addEventListener("click", formatText);
     clearBtn.addEventListener("click", clearText);
+    undoBtn.addEventListener("click", undoLastAction);
     postToXBtn.addEventListener("click", postToX);
 
-    applyTheme(localStorage.getItem(THEME_KEY) || "light");
+    applyTheme(readStoredValue(THEME_KEY) || "light");
     renderTemplates();
     restoreDraft();
     update();

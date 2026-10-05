@@ -1,0 +1,50 @@
+name: 回帰テスト
+
+on:
+  push:
+    paths:
+      - index.html
+      - vendor/**
+      - tests/**
+      - scripts/**
+      - package*.json
+      - .github/workflows/test.yml
+  pull_request:
+    paths:
+      - index.html
+      - vendor/**
+      - tests/**
+      - scripts/**
+      - package*.json
+      - .github/workflows/test.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Node.js ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        node: [20, 24]
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - name: 開発用パッケージを準備
+        run: npm ci --ignore-scripts
+      - name: 配信用ライブラリの再現性を確認
+        run: |
+          npm run vendor
+          git diff --exit-code -- vendor/
+      - name: 回帰テストを実行
+        run: npm test
