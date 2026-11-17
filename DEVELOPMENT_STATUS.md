@@ -1,10 +1,23 @@
 # 開発・検証状況
 
-最終更新日: 2026-10-13（日本時間）
+最終更新日: 2026-11-17（日本時間）
+
+## 本番公開・公開後の確認（2026-11-17）
+
+- 状態: `CONFIRMED_COMPLETE`（Apple風UI・改善機能の本番公開と公開後QA）
+- 公開先: https://x-post-counter.netlify.app/
+- 公開日時: 2026-11-17 09:38（日本時間）。既存サイトへNetlify Dropで反映
+- deploy: [`6afba1fba25e1bd93c4e5b3e`](https://app.netlify.com/projects/x-post-counter/deploys/6afba1fba25e1bd93c4e5b3e)。管理画面でPublished・現在の公開版であることを確認
+- 公開元commit: `84cf175c4b995be9cb6d023efbe9e431faceb8df`。同commitのGitHub ActionsはNode.js 20 / 24で成功済み
+- HTML・favicon・配信用JS・ライセンスの4ファイルはHTTP 200。取得内容のSHA-256が公開元と完全一致
+- 本番Chromeで20項目成功。文字数・URL・残数・超過、コピー、空白削除と取り消し、クリアと復元、下書き保存、長文省略、定型文の開閉・追加・挿入・削除、テーマ保存を確認
+- 320 / 375 / 768 / 1024 / 1280pxで横はみ出し・ボタン文字の欠けなし。ライト・ダークの描画を確認し、警告・エラーログなし
+- 確認用の定型文を削除し、既存の下書き・テーマを復元。公開用ZIP・照合結果・画面画像はOSの一時領域に保存し、プロジェクトには生成していない
+- 過去の公開保留は、ユーザーによる本番公開の明示指示を受けて解消。以下は実装・再開時点の履歴
 
 ## Apple風UIへの変更（2026-10-13）
 
-- 状態: `CONFIRMED_COMPLETE`（実装・ローカル検証）。本番公開は引き続き承認待ち
+- 状態: `CONFIRMED_COMPLETE`（実装・ローカル検証）。本番公開は2026-11-17に完了
 - 白・淡いグレー・青を基調に、システムフォント、細めの文字、統一した角丸、控えめな影へ変更
 - 文字数とコピー操作を強調し、補助操作・説明の見た目を整理。ダークモードも同じ配色ルールに統一
 - キーボードフォーカスを明示し、動きを減らす設定にも対応。定型文と画像プレビューは狭い画面でも折り返す
@@ -51,8 +64,8 @@
 | 実ブラウザ検証 | IMPLEMENTED_NEEDS_VALIDATION | CONFIRMED_COMPLETE | Chromiumで55項目成功。320〜1280pxの10幅、ライト・ダークの画面確認 |
 | GitHub Actions | NOT_STARTED | CONFIRMED_COMPLETE | 実装commit `de8f30a` のpush・PRでNode.js 20 / 24の全ジョブが成功。回帰テストと配信用ライブラリの再現性を確認 |
 | 既存の本番配信 | CONFIRMED_COMPLETE | CONFIRMED_COMPLETE | HTML・faviconともHTTP 200、既存deployはready |
-| 今回の修正版の本番公開 | NOT_STARTED | BLOCKED | 自動承認審査が、具体的な本番反映の明示承認不足としてアップロードを拒否。反映時はHTML・favicon・vendorを含める |
-| 今回の修正版の本番QA | NOT_STARTED | BLOCKED | 本番反映の承認・完了後に実施する |
+| 今回の修正版の本番公開 | NOT_STARTED | CONFIRMED_COMPLETE | ユーザーの明示指示に基づき2026-11-17に既存サイトへ反映。deploy `6afba1fba25e1bd93c4e5b3e` がPublished |
+| 今回の修正版の本番QA | NOT_STARTED | CONFIRMED_COMPLETE | 公開4ファイルのHTTP 200・SHA-256一致、本番Chrome20項目（5画面幅を含む）成功 |
 | 途中の実装・未保存作業の引継ぎ | NOT_APPLICABLE | NOT_APPLICABLE | 開始時に未commitの実装変更はなかった |
 | lint・型検査・本番ビルド | NOT_APPLICABLE | NOT_APPLICABLE | 専用設定・工程なし。HTML内JSはテストで評価し、差分の空白エラーも確認。通常の配信ビルドは不要 |
 | API・DB・アプリ認証・migration | NOT_APPLICABLE | NOT_APPLICABLE | 静的サイトのため対象外 |
@@ -77,4 +90,4 @@
 
 GitHub Actionsも実行済みで、Node.js 20 / 24の回帰テストと配信用ライブラリの再生成が成功した。実装commit `de8f30a` の記録: [PRの実行結果](https://github.com/Lucci0107/x-post-counter/actions/runs/37321594962)、[pushの実行結果](https://github.com/Lucci0107/x-post-counter/actions/runs/37321594529)。
 
-承認後は既存Netlifyサイトへ修正版をアップロードし、HTML・favicon・配信用ライブラリとライセンスの配信内容、HTTP応答、本番の主要操作、モバイル表示を確認する。新しいサイトや別の配信方式は作らない。
+2026-11-17に既存Netlifyサイトへの反映と本番QAまで完了した。公開ファイルの一致、主要操作、5画面幅、ライト・ダーク表示を確認済み。Safari実機とXへの実投稿は今回も実施していない。
